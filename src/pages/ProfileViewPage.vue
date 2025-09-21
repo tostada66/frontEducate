@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-md flex flex-center">
-    <q-card class="q-pa-lg" style="max-width: 800px; width: 100%">
+    <q-card class="q-pa-lg" style="max-width: 900px; width: 100%">
       <!-- Header -->
       <q-card-section>
         <div class="text-h6 text-center text-primary">Mi Perfil</div>
@@ -11,13 +11,16 @@
 
       <q-separator />
 
-      <!-- Foto + datos básicos -->
+      <!-- 📷 Foto + datos básicos -->
       <q-card-section class="row items-center q-col-gutter-md">
         <div class="col-auto text-center">
-          <q-avatar size="100px" color="primary" text-color="white">
-            <template v-if="fotoUrl">
-              <img :src="fotoUrl" alt="avatar" />
-            </template>
+          <q-avatar size="120px" color="primary" text-color="white">
+            <!-- ✅ vista previa si selecciona foto, si no, la guardada -->
+            <img
+              v-if="previewUrl || fotoUrl"
+              :src="previewUrl || fotoUrl"
+              alt="avatar"
+            />
             <template v-else>
               {{ iniciales }}
             </template>
@@ -36,11 +39,10 @@
             type="file"
             class="hidden"
             accept="image/*"
-            @change="uploadFoto"
+            @change="handleFileChange"
           />
         </div>
 
-        <!-- Datos básicos -->
         <div class="col">
           <q-input
             v-model="form.nombres"
@@ -48,7 +50,6 @@
             outlined
             dense
             :disable="!editMode"
-            clearable
           />
           <q-input
             v-model="form.apellidos"
@@ -56,7 +57,6 @@
             outlined
             dense
             :disable="!editMode"
-            clearable
           />
           <q-input
             v-model="form.nombreusuario"
@@ -64,7 +64,6 @@
             outlined
             dense
             :disable="!editMode"
-            clearable
           />
           <q-input
             v-model="form.correo"
@@ -73,7 +72,6 @@
             outlined
             dense
             :disable="!editMode"
-            clearable
           />
           <q-input
             v-model="form.telefono"
@@ -81,51 +79,48 @@
             outlined
             dense
             :disable="!editMode"
-            clearable
-          />
-          <q-input
-            v-model="form.nivelacademico"
-            label="Nivel Académico"
-            outlined
-            dense
-            :disable="!editMode"
-            clearable
           />
         </div>
       </q-card-section>
 
       <q-separator />
 
-      <!-- Categorías -->
+      <!-- 🎓 Nivel académico -->
       <q-card-section>
-        <div class="text-subtitle2 q-mb-sm">Intereses / Categorías</div>
-        <div class="q-pa-sm bg-grey-2 rounded-borders">
-          <q-chip
-            v-for="cat in categoriasSeleccionadas"
-            :key="cat.idcategoria"
-            color="primary"
-            text-color="white"
-            class="q-mr-sm q-mb-sm"
-          >
-            {{ cat.nombre }}
-          </q-chip>
-          <div v-if="categoriasSeleccionadas.length === 0" class="text-grey">
-            No seleccionaste categorías
-          </div>
-        </div>
+        <div class="text-subtitle1 text-primary q-mb-md">Nivel académico</div>
+        <q-select
+          v-if="editMode"
+          v-model="form.nivelacademico"
+          :options="nivelesAcademicos"
+          label="Selecciona tu nivel académico"
+          outlined
+          dense
+          emit-value
+          map-options
+        />
+        <q-input
+          v-else
+          v-model="form.nivelacademico"
+          label="Nivel académico"
+          outlined
+          dense
+          disable
+        />
       </q-card-section>
 
       <q-separator />
 
-      <!-- Datos extendidos -->
+      <!-- 🌐 Redes y bio -->
       <q-card-section>
+        <div class="text-subtitle1 text-primary q-mb-md">
+          Redes y presentación
+        </div>
         <q-input
           v-model="form.linkedin_url"
           label="LinkedIn"
           outlined
           dense
           :disable="!editMode"
-          clearable
         />
         <q-input
           v-model="form.github_url"
@@ -133,7 +128,6 @@
           outlined
           dense
           :disable="!editMode"
-          clearable
         />
         <q-input
           v-model="form.web_url"
@@ -141,7 +135,6 @@
           outlined
           dense
           :disable="!editMode"
-          clearable
         />
         <q-input
           v-model="form.bio"
@@ -150,18 +143,65 @@
           outlined
           dense
           :disable="!editMode"
-          clearable
+          autogrow
         />
       </q-card-section>
 
-      <!-- Botones -->
+      <q-separator />
+
+      <!-- 📌 Intereses -->
+      <q-card-section>
+        <div class="text-subtitle1 text-primary q-mb-md">
+          Intereses / Categorías
+        </div>
+
+        <!-- En edición: TODAS -->
+        <div
+          v-if="editMode"
+          class="q-pa-sm bg-grey-2 rounded-borders row q-col-gutter-sm"
+        >
+          <q-chip
+            v-for="cat in categorias"
+            :key="cat.idcategoria"
+            :label="cat.nombre"
+            color="primary"
+            text-color="white"
+            clickable
+            :outline="!cat.seleccionado"
+            @click="toggleCategoria(cat)"
+          />
+        </div>
+
+        <!-- Solo vista: SOLO seleccionadas -->
+        <div
+          v-else
+          class="q-pa-sm bg-grey-2 rounded-borders row q-col-gutter-sm"
+        >
+          <q-chip
+            v-for="cat in categorias.filter((c) => c.seleccionado)"
+            :key="cat.idcategoria"
+            :label="cat.nombre"
+            color="primary"
+            text-color="white"
+          />
+          <div
+            v-if="categorias.filter((c) => c.seleccionado).length === 0"
+            class="text-grey"
+          >
+            No seleccionaste categorías
+          </div>
+        </div>
+      </q-card-section>
+
+      <!-- 🔘 Botones -->
+      <q-separator />
       <q-card-actions align="right">
         <q-btn
           v-if="!editMode"
           label="Editar perfil"
           color="primary"
           icon="edit"
-          @click="editMode = true"
+          @click="enableEdit"
         />
         <q-btn
           v-else
@@ -200,13 +240,16 @@ const form = ref({
   bio: "",
 });
 
-const categoriasSeleccionadas = ref([]);
-const fotoUrl = ref(null);
+const nivelesAcademicos = ["Principiante", "Intermedio", "Avanzado"];
+
+const categorias = ref([]);
+const fotoUrl = ref(null); // foto guardada en backend
+const previewUrl = ref(null); // ✅ foto temporal seleccionada
 const loading = ref(false);
 const editMode = ref(false);
 const originalData = ref({});
+const idusuario = ref(null);
 
-// Iniciales si no hay foto
 const iniciales = computed(() => {
   if (!form.value.nombres || !form.value.apellidos) return "U";
   return (
@@ -215,34 +258,40 @@ const iniciales = computed(() => {
   );
 });
 
-// File input
 const fileInput = ref(null);
 function pickFile() {
   fileInput.value.click();
 }
 
-// 📂 Subir foto
-async function uploadFoto(e) {
+// ✅ Manejar archivo para preview inmediato
+function handleFileChange(e) {
   const file = e.target.files[0];
   if (!file) return;
-  const fd = new FormData();
-  fd.append("foto", file);
-
-  try {
-    const { data } = await api.post("/me/profile/foto", fd, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    fotoUrl.value = data.foto_url;
-  } catch (err) {
-    console.error("❌ Error subiendo foto:", err.response?.data || err);
-  }
+  previewUrl.value = URL.createObjectURL(file);
 }
 
-// 📂 Guardar cambios de perfil
+// 📂 Guardar cambios
 async function updateProfile() {
   loading.value = true;
   try {
-    await api.patch("/me/profile", form.value);
+    await api.patch("/me/profile", {
+      ...form.value,
+      categorias: categorias.value
+        .filter((c) => c.seleccionado)
+        .map((c) => c.idcategoria),
+    });
+
+    // si hay una nueva foto, subirla
+    if (fileInput.value?.files[0]) {
+      const fd = new FormData();
+      fd.append("foto", fileInput.value.files[0]);
+      const { data } = await api.post("/me/profile/foto", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      fotoUrl.value = data.user.foto_url;
+      previewUrl.value = null; // limpiar preview, ya está guardada
+    }
+
     editMode.value = false;
     loadProfile();
   } catch (err) {
@@ -254,16 +303,25 @@ async function updateProfile() {
 
 // 📂 Cancelar edición
 function cancelEdit() {
-  form.value = { ...originalData.value }; // restaurar los datos originales
+  form.value = { ...originalData.value };
+  previewUrl.value = null; // cancelar descarta preview
   editMode.value = false;
+  loadProfile();
 }
 
-// 📂 Cargar perfil (logueado)
+// 📂 Toggle categoría
+function toggleCategoria(cat) {
+  if (!editMode.value) return;
+  cat.seleccionado = !cat.seleccionado;
+}
+
+// 📂 Cargar perfil
 async function loadProfile() {
   try {
     const { data } = await api.get("/me/profile");
     const u = data.user;
 
+    idusuario.value = u.idusuario;
     form.value = {
       nombres: u.nombres || "",
       apellidos: u.apellidos || "",
@@ -277,12 +335,33 @@ async function loadProfile() {
       bio: u.bio || "",
     };
 
+    categorias.value = (u.categorias || []).filter((c) => c.seleccionado);
+
     originalData.value = { ...form.value };
-    categoriasSeleccionadas.value = u.categorias || [];
     fotoUrl.value = u.foto_url;
   } catch (err) {
     console.error("❌ Error cargando perfil:", err.response?.data || err);
   }
+}
+
+// 📂 Cargar TODAS las categorías en edición
+async function loadAllCategorias() {
+  try {
+    const { data } = await api.get(
+      `/estudiantes/${idusuario.value}/categorias`
+    );
+    categorias.value = data.categorias || [];
+  } catch (err) {
+    console.error(
+      "❌ Error cargando todas las categorías:",
+      err.response?.data || err
+    );
+  }
+}
+
+async function enableEdit() {
+  editMode.value = true;
+  await loadAllCategorias();
 }
 
 onMounted(() => {

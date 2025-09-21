@@ -1,11 +1,14 @@
 <template>
   <q-page class="q-pa-md flex flex-center">
-    <q-card class="q-pa-lg" style="max-width: 800px; width: 100%">
+    <q-card class="q-pa-lg" style="max-width: 1000px; width: 100%">
       <!-- Header -->
       <q-card-section>
-        <div class="text-h5 text-weight-bold text-primary">Perfil Profesor</div>
+        <div class="text-h5 text-weight-bold text-primary">
+          Completa tu perfil docente
+        </div>
         <div class="text-grey-7">
-          Completa tu información como profesor antes de iniciar sesión
+          Esta información aparecerá en tus cursos y ayudará a los estudiantes a
+          conocerte mejor
         </div>
       </q-card-section>
 
@@ -22,11 +25,12 @@
       </q-card-section>
 
       <!-- ✅ Formulario -->
-      <q-form @submit.prevent="onSubmit" class="q-gutter-md">
-        <!-- Foto + Datos básicos -->
-        <q-card-section class="row items-center q-col-gutter-md">
-          <div class="col-auto text-center">
-            <q-avatar size="100px" color="primary" text-color="white">
+      <q-form @submit.prevent="onSubmit" class="q-gutter-md" ref="formRef">
+        <!-- Datos básicos -->
+        <q-card-section class="row q-col-gutter-md items-start">
+          <!-- 📷 Foto -->
+          <div class="col-12 col-md-3 text-center">
+            <q-avatar size="120px" color="primary" text-color="white">
               <template v-if="fotoUrl">
                 <img :src="fotoUrl" alt="avatar" />
               </template>
@@ -36,8 +40,8 @@
             </q-avatar>
 
             <q-btn
-              class="q-mt-sm full-width"
-              label="Cambiar foto"
+              class="q-mt-md full-width"
+              label="Seleccionar foto"
               color="secondary"
               size="sm"
               @click="pickFile"
@@ -49,98 +53,168 @@
               accept="image/*"
               @change="uploadFoto"
             />
+            <div class="text-caption text-grey-6 q-mt-sm">
+              JPG, PNG máx. 2MB
+            </div>
           </div>
 
-          <div class="col">
-            <q-input
-              v-model.trim="form.nombres"
-              label="Nombres"
-              outlined
-              dense
-              disable
-            />
-            <q-input
-              v-model.trim="form.apellidos"
-              label="Apellidos"
-              outlined
-              dense
-              disable
-            />
-            <q-input
-              v-model.trim="form.correo"
-              label="Correo"
-              outlined
-              dense
-              disable
-            />
-            <q-input
-              v-model.trim="form.nombreusuario"
-              label="Usuario"
-              outlined
-              dense
-              disable
-            />
-            <q-input
-              v-model.trim="form.telefono"
-              label="Teléfono"
-              outlined
-              dense
-              disable
-            />
+          <!-- 📋 Campos -->
+          <div class="col-12 col-md-9 row q-col-gutter-md">
+            <div class="col-12 col-sm-6">
+              <q-input
+                v-model.trim="form.nombres"
+                label="Nombre completo *"
+                outlined
+                dense
+                disable
+              />
+            </div>
+            <div class="col-12 col-sm-6">
+              <q-input
+                v-model.trim="form.especialidad"
+                label="Título profesional *"
+                outlined
+                dense
+                :rules="[
+                  (val) => !!val || 'El título profesional es obligatorio',
+                ]"
+              />
+            </div>
+
+            <div class="col-12">
+              <q-input
+                v-model.trim="form.bio"
+                label="Descripción profesional *"
+                type="textarea"
+                outlined
+                dense
+                autogrow
+                :rules="[
+                  (val) => !!val || 'La descripción es obligatoria',
+                  (val) => val.length >= 20 || 'Mínimo 20 caracteres',
+                ]"
+              />
+            </div>
+
+            <div class="col-12 col-sm-6">
+              <q-input
+                v-model.trim="form.direccion"
+                label="Dirección"
+                outlined
+                dense
+                :rules="[
+                  (val) =>
+                    !val || val.length >= 5 || 'La dirección es muy corta',
+                ]"
+              />
+            </div>
+            <div class="col-12 col-sm-6">
+              <q-input
+                v-model.trim="form.pais"
+                label="País *"
+                outlined
+                dense
+                :rules="[(val) => !!val || 'Debes ingresar el país']"
+              />
+            </div>
           </div>
         </q-card-section>
 
-        <!-- Datos extendidos -->
-        <q-card-section class="row q-col-gutter-md">
-          <div class="col-12">
-            <q-input
-              v-model.trim="form.especialidad"
-              label="Especialidad *"
-              outlined
-              dense
-              clearable
-              :error="!!fe.especialidad"
-              :error-message="fe.especialidad"
-              @blur="touch('especialidad')"
-            />
+        <!-- 🌐 Redes y portafolio -->
+        <q-separator spaced />
+        <q-card-section>
+          <div class="text-subtitle1 text-primary q-mb-md">
+            Redes y portafolio
           </div>
-          <div class="col-12">
-            <q-input
-              v-model.trim="form.bio"
-              label="Biografía"
-              type="textarea"
-              outlined
-              dense
-              autogrow
-              clearable
-            />
+          <div class="row q-col-gutter-md">
+            <div class="col-12 col-sm-4">
+              <q-input
+                v-model.trim="form.linkedin_url"
+                label="LinkedIn"
+                outlined
+                dense
+                clearable
+                :rules="[
+                  (val) =>
+                    !val || val.startsWith('http') || 'Debe ser una URL válida',
+                ]"
+              />
+            </div>
+            <div class="col-12 col-sm-4">
+              <q-input
+                v-model.trim="form.github_url"
+                label="GitHub"
+                outlined
+                dense
+                clearable
+                :rules="[
+                  (val) =>
+                    !val || val.startsWith('http') || 'Debe ser una URL válida',
+                ]"
+              />
+            </div>
+            <div class="col-12 col-sm-4">
+              <q-input
+                v-model.trim="form.web_url"
+                label="Sitio web"
+                outlined
+                dense
+                clearable
+                :rules="[
+                  (val) =>
+                    !val || val.startsWith('http') || 'Debe ser una URL válida',
+                ]"
+              />
+            </div>
           </div>
-          <div class="col-12 col-sm-6">
-            <q-input
-              v-model.trim="form.linkedin_url"
-              label="LinkedIn"
-              outlined
-              dense
-              clearable
-            />
+        </q-card-section>
+
+        <!-- 🏢 Experiencia laboral -->
+        <q-separator spaced />
+        <q-card-section>
+          <div class="text-subtitle1 text-primary q-mb-md">
+            Experiencia laboral
           </div>
-          <div class="col-12 col-sm-6">
-            <q-input
-              v-model.trim="form.github_url"
-              label="GitHub"
-              outlined
-              dense
-              clearable
-            />
-          </div>
-          <div class="col-12">
-            <q-input
-              v-model.trim="form.web_url"
-              label="Sitio Web"
-              outlined
-              dense
-              clearable
-            />
+          <div class="row q-col-gutter-md">
+            <div class="col-12 col-sm-6">
+              <q-input
+                v-model.trim="form.empresa"
+                label="Empresa"
+                outlined
+                dense
+              />
+            </div>
+            <div class="col-12 col-sm-6">
+              <q-input v-model.trim="form.cargo" label="Cargo" outlined dense />
+            </div>
+            <div class="col-12 col-sm-6">
+              <q-input
+                v-model="form.fecha_inicio"
+                type="date"
+                label="Fecha inicio"
+                outlined
+                dense
+              />
+            </div>
+            <div class="col-12 col-sm-6">
+              <q-input
+                v-model="form.fecha_fin"
+                type="date"
+                label="Fecha fin"
+                outlined
+                dense
+              />
+            </div>
+            <div class="col-12">
+              <q-input
+                v-model.trim="form.detalles"
+                label="Detalles de la experiencia"
+                type="textarea"
+                outlined
+                dense
+                autogrow
+              />
+            </div>
           </div>
         </q-card-section>
 
@@ -172,6 +246,7 @@ const idusuario = route.query.idusuario;
 const loading = ref(false);
 const successMsg = ref("");
 const errors = reactive({ general: "" });
+const formRef = ref(null);
 
 const api = axios.create({
   baseURL: "http://127.0.0.1:8000/api",
@@ -183,17 +258,21 @@ const form = reactive({
   nombres: "",
   apellidos: "",
   correo: "",
-  nombreusuario: "",
-  telefono: "",
   especialidad: "",
+  bio: "",
+  direccion: "",
+  pais: "",
+  empresa: "",
+  cargo: "",
+  fecha_inicio: "",
+  fecha_fin: "",
+  detalles: "",
   linkedin_url: "",
   github_url: "",
   web_url: "",
-  bio: "",
 });
 
 const fotoUrl = ref(null);
-const fe = reactive({ especialidad: "" });
 
 // Iniciales si no hay foto
 const iniciales = computed(() => {
@@ -204,22 +283,13 @@ const iniciales = computed(() => {
   );
 });
 
-// Validación
-function touch(k) {
-  if (k === "especialidad" && !form.especialidad) {
-    fe.especialidad = "La especialidad es obligatoria.";
-  } else {
-    fe.especialidad = "";
-  }
-}
-
 // Input file
 const fileInput = ref(null);
 function pickFile() {
   fileInput.value.click();
 }
 
-// 📂 Subir foto (público)
+// 📂 Subir foto
 async function uploadFoto(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -238,7 +308,7 @@ async function uploadFoto(e) {
   }
 }
 
-// 📂 Cargar datos desde backend (público)
+// 📂 Cargar datos desde backend
 async function loadProfile() {
   try {
     const { data } = await api.get(`/register/profesor/show/${idusuario}`);
@@ -253,20 +323,19 @@ async function loadProfile() {
   }
 }
 
-// 📂 Guardar cambios (público)
+// 📂 Guardar cambios
 async function onSubmit() {
-  touch("especialidad");
-  if (fe.especialidad) return;
+  const valid = await formRef.value.validate();
+  if (!valid) {
+    errors.general = "Por favor completa los campos obligatorios.";
+    return;
+  }
 
   loading.value = true;
   try {
     await api.post("/register/profesor", {
       idusuario,
-      especialidad: form.especialidad,
-      bio: form.bio,
-      linkedin_url: form.linkedin_url,
-      github_url: form.github_url,
-      web_url: form.web_url,
+      ...form,
     });
 
     successMsg.value = "Perfil guardado correctamente.";
