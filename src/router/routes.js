@@ -3,7 +3,7 @@ const routes = [
     path: "/",
     component: () => import("layouts/MainLayout.vue"),
     children: [
-      // ✅ Página principal (IndexPage), protegida con login
+      // ✅ Página principal dinámica según rol
       {
         path: "",
         name: "index",
@@ -28,43 +28,35 @@ const routes = [
         component: () => import("pages/ResetPasswordPage.vue"),
       },
 
-      // ✅ Onboarding nivel académico (sin login todavía)
+      // ✅ Onboarding
       {
         path: "onboarding/nivel",
         name: "onb-nivel",
         component: () => import("pages/OnbNivelPage.vue"),
       },
-
-      // ✅ Onboarding intereses (también sin login)
       {
         path: "onboarding/intereses",
         name: "onb-intereses",
         component: () => import("pages/OnbInteresesPage.vue"),
       },
 
-      // ✅ Página de perfil final (flujo de registro, no requiere login)
+      // ✅ Perfil
       {
         path: "profile",
         name: "profile",
         component: () => import("pages/ProfilePage.vue"),
       },
-
-      // ✅ Perfil Estudiante (ya logueado)
       {
         path: "profile/view",
         name: "profile-view",
         component: () => import("pages/ProfileViewPage.vue"),
         meta: { requiresAuth: true },
       },
-
-      // ✅ Perfil Profesor (registro antes de login)
       {
         path: "register/profesor/profile",
         name: "register-profesor-profile",
         component: () => import("pages/ProfileProfesorPage.vue"),
       },
-
-      // ✅ Perfil Profesor (ya logueado)
       {
         path: "profesor/profile",
         name: "profesor-profile",
@@ -72,7 +64,7 @@ const routes = [
         meta: { requiresAuth: true },
       },
 
-      // ✅ Cursos (gestión del profesor)
+      // ✅ Cursos (gestión profe/admin)
       {
         path: "cursos",
         name: "cursos-list",
@@ -93,35 +85,84 @@ const routes = [
         meta: { requiresAuth: true },
       },
 
-      // ✅ Clases (gestión de clases dentro de un curso)
+      // ✅ Unidades
       {
-        path: "cursos/:idcurso/clases",
+        path: "cursos/:idcurso/unidades",
+        name: "unidades-list",
+        component: () => import("pages/UnidadesListPage.vue"),
+        props: true,
+        meta: { requiresAuth: true },
+      },
+      {
+        path: "cursos/:idcurso/unidades/create",
+        name: "unidad-create",
+        component: () => import("pages/UnidadFormPage.vue"),
+        props: true,
+        meta: { requiresAuth: true },
+      },
+      {
+        path: "cursos/:idcurso/unidades/:idunidad/edit",
+        name: "unidad-edit",
+        component: () => import("pages/UnidadFormPage.vue"),
+        props: true,
+        meta: { requiresAuth: true },
+      },
+
+      // ✅ Clases
+      {
+        path: "cursos/:idcurso/unidades/:idunidad/clases",
         name: "clases-list",
         component: () => import("pages/ClasesListPage.vue"),
         props: true,
         meta: { requiresAuth: true },
       },
-
-      // ✅ Contenidos (gestión de contenidos dentro de una clase)
       {
-        path: "clases/:idclase/contenidos",
+        path: "cursos/:idcurso/unidades/:idunidad/clases/create",
+        name: "clases-create",
+        component: () => import("pages/ClaseFormPage.vue"),
+        props: true,
+        meta: { requiresAuth: true },
+      },
+      {
+        path: "cursos/:idcurso/unidades/:idunidad/clases/:idclase/edit",
+        name: "clases-edit",
+        component: () => import("pages/ClaseFormPage.vue"),
+        props: true,
+        meta: { requiresAuth: true },
+      },
+
+      // ✅ Contenidos
+      {
+        path: "cursos/:idcurso/unidades/:idunidad/clases/:idclase/contenidos",
         name: "contenidos-list",
         component: () => import("pages/ContenidosListPage.vue"),
         props: true,
         meta: { requiresAuth: true },
       },
       {
+        path: "cursos/:idcurso/unidades/:idunidad/clases/:idclase/contenidos/create",
+        name: "contenidos-create",
+        component: () => import("pages/ContenidoFormPage.vue"),
+        props: true,
+        meta: { requiresAuth: true },
+      },
+      {
+        path: "cursos/:idcurso/unidades/:idunidad/clases/:idclase/contenidos/:idcontenido/edit",
+        name: "contenidos-edit",
+        component: () => import("pages/ContenidoFormPage.vue"),
+        props: true,
+        meta: { requiresAuth: true },
+      },
+
+      // ✅ Estudiante
+      {
         path: "estudiante/dashboard",
         name: "estudiante-dashboard",
         component: () => import("pages/EstudianteDashboardPage.vue"),
         meta: { requiresAuth: true },
       },
-      {
-        path: "catalogo/cursos/:idcurso",
-        name: "curso-detalle",
-        component: () => import("pages/CursoDetallePage.vue"),
-        meta: { requiresAuth: true },
-      },
+
+      // ✅ Catálogo (lo mostramos como home del estudiante)
       {
         path: "catalogo/cursos",
         name: "catalogo-cursos",

@@ -4,10 +4,10 @@
       <!-- Header -->
       <q-card-section>
         <div class="text-h6 text-primary">
-          {{ isEdit ? "Editar Curso" : "Nuevo Curso" }}
+          {{ isEdit ? "Editar Unidad" : "Nueva Unidad" }}
         </div>
         <div class="text-subtitle2 text-grey-7">
-          Completa la información del curso
+          Completa la información de la unidad
         </div>
       </q-card-section>
 
@@ -15,46 +15,39 @@
 
       <!-- Formulario -->
       <q-card-section>
-        <q-form @submit.prevent="saveCurso" class="q-gutter-md">
-          <!-- Nombre -->
+        <q-form @submit.prevent="saveUnidad" class="q-gutter-md">
+          <!-- Título -->
           <q-input
-            v-model="form.nombre"
-            label="Título del curso"
+            v-model="form.titulo"
+            label="Título de la unidad"
             outlined
             dense
             required
           />
 
-          <!-- Nivel -->
-          <q-select
-            v-model="form.nivel"
-            :options="['Básico', 'Intermedio', 'Avanzado']"
-            label="Nivel"
+          <!-- Descripción -->
+          <q-input
+            v-model="form.descripcion"
+            label="Descripción"
+            type="textarea"
             outlined
             dense
-            behavior="menu"
-            popup-content-class="select-popup"
+            autogrow
           />
 
-          <!-- Categoría -->
-          <q-select
-            v-model="form.idcategoria"
-            :options="categoriasOptions"
-            option-label="nombre"
-            option-value="idcategoria"
-            emit-value
-            map-options
-            label="Categoría"
+          <!-- Objetivos -->
+          <q-input
+            v-model="form.objetivos"
+            label="Objetivos"
+            type="textarea"
             outlined
             dense
-            :loading="loadingCategorias"
-            behavior="menu"
-            popup-content-class="select-popup"
+            autogrow
           />
 
           <!-- Imagen -->
           <div>
-            <div class="text-subtitle2 q-mb-sm">Imagen del curso</div>
+            <div class="text-subtitle2 q-mb-sm">Imagen de la unidad</div>
             <input
               ref="fileInput"
               type="file"
@@ -79,21 +72,10 @@
             />
           </div>
 
-          <!-- Descripción -->
-          <q-input
-            v-model="form.descripcion"
-            label="Descripción"
-            type="textarea"
-            outlined
-            dense
-            autogrow
-          />
-
-          <!-- Estado (solo en edición) -->
+          <!-- Estado -->
           <q-select
-            v-if="isEdit"
             v-model="form.estado"
-            :options="['borrador', 'publicado', 'archivado']"
+            :options="['borrador', 'publicado']"
             label="Estado"
             outlined
             dense
@@ -130,37 +112,20 @@ import { useRoute, useRouter } from "vue-router";
 const route = useRoute();
 const router = useRouter();
 
-const isEdit = !!route.params.idcurso;
+const isEdit = !!route.params.idunidad;
 const loading = ref(false);
+const idcurso = route.params.idcurso;
 
 // Datos del formulario
 const form = ref({
-  nombre: "",
+  titulo: "",
   descripcion: "",
-  nivel: "",
-  idcategoria: null,
+  objetivos: "",
   estado: "borrador",
 });
 
-// Imagen
 const imagenFile = ref(null);
 const previewUrl = ref(null);
-
-// Categorías
-const categoriasOptions = ref([]);
-const loadingCategorias = ref(false);
-
-async function loadCategorias() {
-  loadingCategorias.value = true;
-  try {
-    const { data } = await api.get("/categorias");
-    categoriasOptions.value = data;
-  } catch (err) {
-    console.error("❌ Error cargando categorías:", err.response?.data || err);
-  } finally {
-    loadingCategorias.value = false;
-  }
-}
 
 // Manejo de imagen
 function onFileChange(e) {
@@ -171,72 +136,78 @@ function onFileChange(e) {
   }
 }
 
-// Cargar curso (si es edición)
-async function loadCurso() {
+// 📂 Cargar unidad si es edición
+async function loadUnidad() {
   try {
-    const { data } = await api.get(`/cursos/${route.params.idcurso}`);
+    const { data } = await api.get(
+      `/cursos/${idcurso}/unidades/${route.params.idunidad}`
+    );
     form.value = {
-      nombre: data.nombre,
+      titulo: data.titulo,
       descripcion: data.descripcion,
-      nivel: data.nivel,
-      idcategoria: data.idcategoria,
+      objetivos: data.objetivos,
       estado: data.estado,
     };
+
     if (data.imagen_url) {
       previewUrl.value = data.imagen_url;
     }
   } catch (err) {
-    console.error("❌ Error cargando curso:", err.response?.data || err);
+    console.error("❌ Error cargando unidad:", err.response?.data || err);
   }
 }
 
-// Guardar curso
-async function saveCurso() {
+// 📂 Guardar unidad
+async function saveUnidad() {
   loading.value = true;
   try {
     const fd = new FormData();
-    fd.append("nombre", form.value.nombre);
+    fd.append("titulo", form.value.titulo);
     fd.append("descripcion", form.value.descripcion);
-    fd.append("nivel", form.value.nivel);
-    fd.append("idcategoria", form.value.idcategoria);
-    if (isEdit) fd.append("estado", form.value.estado);
+    fd.append("objetivos", form.value.objetivos);
+    fd.append("estado", form.value.estado);
     if (imagenFile.value) fd.append("imagen", imagenFile.value);
 
     if (isEdit) {
-      await api.post(`/cursos/${route.params.idcurso}?_method=PATCH`, fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      await api.post(
+        `/cursos/${idcurso}/unidades/${route.params.idunidad}?_method=PATCH`,
+        fd,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
 
-      // 👉 si es edición volvemos a la lista
-      router.push({ name: "cursos-list" });
+      // 👉 si es edición, volver a lista de unidades
+      router.push({ name: "unidades-list", params: { idcurso } });
     } else {
-      const { data } = await api.post("/cursos", fd, {
+      const { data } = await api.post(`/cursos/${idcurso}/unidades`, fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      // 👉 redirigir directo a crear unidad del curso recién creado
-      const newId = data.curso?.idcurso;
-      if (newId) {
-        router.push({ name: "unidad-create", params: { idcurso: newId } });
+      const newIdUnidad = data.idunidad;
+
+      // 👉 si es nueva unidad, ir a crear clase
+      if (newIdUnidad) {
+        router.push({
+          name: "clases-create",
+          params: { idcurso, idunidad: newIdUnidad },
+        });
       } else {
-        router.push({ name: "cursos-list" });
+        router.push({ name: "unidades-list", params: { idcurso } });
       }
     }
   } catch (err) {
-    console.error("❌ Error guardando curso:", err.response?.data || err);
+    console.error("❌ Error guardando unidad:", err.response?.data || err);
   } finally {
     loading.value = false;
   }
 }
 
 onMounted(() => {
-  loadCategorias();
-  if (isEdit) loadCurso();
+  if (isEdit) loadUnidad();
 });
 </script>
 
 <style>
-/* Ajusta el alto de todos los selects */
+/* Ajusta el alto del menú desplegable */
 .select-popup {
   max-height: 250px;
   overflow-y: auto;

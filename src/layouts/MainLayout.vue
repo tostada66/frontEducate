@@ -55,16 +55,24 @@
 
         <!-- ✅ Cursos (solo profesores) -->
         <q-item
-          v-if="
-            auth.isAuthed &&
-            ((auth.user?.rolRel?.nombre || '').toLowerCase() === 'profesor' ||
-              auth.user?.rol_id === 2)
-          "
+          v-if="auth.isAuthed && auth.isProfessor"
           clickable
           @click="goCursos"
         >
           <q-item-section avatar><q-icon name="school" /></q-item-section>
           <q-item-section>Cursos</q-item-section>
+        </q-item>
+
+        <!-- ✅ Catálogo de cursos (solo estudiantes) -->
+        <q-item
+          v-if="auth.isAuthed && auth.isStudent"
+          clickable
+          @click="goCatalogo"
+        >
+          <q-item-section avatar
+            ><q-icon name="library_books"
+          /></q-item-section>
+          <q-item-section>Catálogo</q-item-section>
         </q-item>
 
         <!-- Logout también en drawer -->
@@ -103,9 +111,7 @@ function toggleLeftDrawer() {
 function goProfile() {
   if (!auth.user) return;
 
-  const rol = (auth.user?.rolRel?.nombre || "").toLowerCase();
-
-  if (rol === "profesor" || auth.user?.rol_id === 2) {
+  if (auth.isProfessor) {
     router.push({ name: "profesor-profile" });
   } else {
     router.push({ name: "profile-view" });
@@ -114,7 +120,12 @@ function goProfile() {
 
 // ✅ Redirigir a lista de cursos (para profesor)
 function goCursos() {
-  router.push({ name: "cursos-list" }); // 👈 ahora manda a la lista
+  router.push({ name: "cursos-list" });
+}
+
+// ✅ Redirigir al catálogo (para estudiante)
+function goCatalogo() {
+  router.push({ name: "catalogo-cursos" });
 }
 
 async function doLogout() {

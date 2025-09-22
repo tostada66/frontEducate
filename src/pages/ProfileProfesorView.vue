@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-md flex flex-center">
-    <q-card class="q-pa-lg" style="max-width: 800px; width: 100%">
+    <q-card class="q-pa-lg" style="max-width: 1000px; width: 100%">
       <!-- Header -->
       <q-card-section>
         <div class="text-h6 text-center text-primary">Mi Perfil - Profesor</div>
@@ -14,9 +14,9 @@
       <!-- Foto + datos básicos -->
       <q-card-section class="row items-center q-col-gutter-md">
         <div class="col-auto text-center">
-          <q-avatar size="100px" color="primary" text-color="white">
-            <template v-if="fotoUrl">
-              <img :src="fotoUrl" alt="avatar" />
+          <q-avatar size="120px" color="primary" text-color="white">
+            <template v-if="fotoPreview">
+              <img :src="fotoPreview" alt="avatar" />
             </template>
             <template v-else>
               {{ iniciales }}
@@ -36,7 +36,7 @@
             type="file"
             class="hidden"
             accept="image/*"
-            @change="uploadFoto"
+            @change="onFileSelected"
           />
         </div>
 
@@ -48,7 +48,6 @@
             outlined
             dense
             :disable="!editMode"
-            clearable
           />
           <q-input
             v-model="form.apellidos"
@@ -56,7 +55,6 @@
             outlined
             dense
             :disable="!editMode"
-            clearable
           />
           <q-input
             v-model="form.nombreusuario"
@@ -64,7 +62,6 @@
             outlined
             dense
             :disable="!editMode"
-            clearable
           />
           <q-input
             v-model="form.correo"
@@ -73,7 +70,6 @@
             outlined
             dense
             :disable="!editMode"
-            clearable
           />
           <q-input
             v-model="form.telefono"
@@ -81,7 +77,6 @@
             outlined
             dense
             :disable="!editMode"
-            clearable
           />
           <q-input
             v-model="form.especialidad"
@@ -89,14 +84,13 @@
             outlined
             dense
             :disable="!editMode"
-            clearable
           />
         </div>
       </q-card-section>
 
       <q-separator />
 
-      <!-- Datos extendidos -->
+      <!-- Perfil extendido -->
       <q-card-section>
         <q-input
           v-model="form.linkedin_url"
@@ -104,7 +98,6 @@
           outlined
           dense
           :disable="!editMode"
-          clearable
         />
         <q-input
           v-model="form.github_url"
@@ -112,7 +105,6 @@
           outlined
           dense
           :disable="!editMode"
-          clearable
         />
         <q-input
           v-model="form.web_url"
@@ -120,7 +112,6 @@
           outlined
           dense
           :disable="!editMode"
-          clearable
         />
         <q-input
           v-model="form.bio"
@@ -129,7 +120,82 @@
           outlined
           dense
           :disable="!editMode"
-          clearable
+          autogrow
+        />
+      </q-card-section>
+
+      <q-separator />
+
+      <!-- Datos adicionales -->
+      <q-card-section>
+        <div class="text-subtitle1 text-primary q-mb-sm">Datos adicionales</div>
+        <q-input
+          v-model="form.direccion"
+          label="Dirección"
+          outlined
+          dense
+          :disable="!editMode"
+        />
+        <q-input
+          v-model="form.pais"
+          label="País"
+          outlined
+          dense
+          :disable="!editMode"
+        />
+      </q-card-section>
+
+      <q-separator />
+
+      <!-- Experiencia laboral -->
+      <q-card-section>
+        <div class="text-subtitle1 text-primary q-mb-sm">
+          Experiencia laboral
+        </div>
+        <q-input
+          v-model="form.empresa"
+          label="Empresa"
+          outlined
+          dense
+          :disable="!editMode"
+        />
+        <q-input
+          v-model="form.cargo"
+          label="Cargo"
+          outlined
+          dense
+          :disable="!editMode"
+        />
+        <div class="row q-col-gutter-md">
+          <div class="col-6">
+            <q-input
+              v-model="form.fecha_inicio"
+              type="date"
+              label="Fecha inicio"
+              outlined
+              dense
+              :disable="!editMode"
+            />
+          </div>
+          <div class="col-6">
+            <q-input
+              v-model="form.fecha_fin"
+              type="date"
+              label="Fecha fin"
+              outlined
+              dense
+              :disable="!editMode"
+            />
+          </div>
+        </div>
+        <q-input
+          v-model="form.detalles"
+          label="Detalles de la experiencia"
+          type="textarea"
+          outlined
+          dense
+          :disable="!editMode"
+          autogrow
         />
       </q-card-section>
 
@@ -157,7 +223,6 @@
           color="grey-7"
           @click="cancelEdit"
         />
-        <!-- 🔙 Botón Volver -->
         <q-btn
           flat
           label="Volver"
@@ -185,9 +250,17 @@ const form = ref({
   github_url: "",
   web_url: "",
   bio: "",
+  direccion: "",
+  pais: "",
+  empresa: "",
+  cargo: "",
+  fecha_inicio: "",
+  fecha_fin: "",
+  detalles: "",
 });
 
 const fotoUrl = ref(null);
+const fotoPreview = ref(null); // para la vista previa inmediata
 const loading = ref(false);
 const editMode = ref(false);
 const originalData = ref({});
@@ -201,24 +274,31 @@ const iniciales = computed(() => {
   );
 });
 
-// File input
+// Input file
 const fileInput = ref(null);
 function pickFile() {
   fileInput.value.click();
 }
 
-// 📂 Subir foto
-async function uploadFoto(e) {
+// 👉 Vista previa antes de guardar
+function onFileSelected(e) {
   const file = e.target.files[0];
-  if (!file) return;
+  if (file) {
+    fotoPreview.value = URL.createObjectURL(file);
+    uploadFoto(file);
+  }
+}
+
+// 📂 Subir foto al backend
+async function uploadFoto(file) {
   const fd = new FormData();
   fd.append("foto", file);
-
   try {
     const { data } = await api.post("/me/profile/profesor/foto", fd, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     fotoUrl.value = data.user.foto_url;
+    fotoPreview.value = data.user.foto_url; // ✅ asegura vista previa
   } catch (err) {
     console.error("❌ Error subiendo foto:", err.response?.data || err);
   }
@@ -240,8 +320,9 @@ async function updateProfile() {
 
 // 📂 Cancelar edición
 function cancelEdit() {
-  form.value = { ...originalData.value }; // restaurar los datos originales
+  form.value = { ...originalData.value };
   editMode.value = false;
+  fotoPreview.value = fotoUrl.value;
 }
 
 // 📂 Cargar perfil (logueado)
@@ -261,10 +342,18 @@ async function loadProfile() {
       github_url: u.github_url || "",
       web_url: u.web_url || "",
       bio: u.bio || "",
+      direccion: u.direccion || "",
+      pais: u.pais || "",
+      empresa: u.empresa || "",
+      cargo: u.cargo || "",
+      fecha_inicio: u.fecha_inicio || "",
+      fecha_fin: u.fecha_fin || "",
+      detalles: u.detalles || "",
     };
 
     originalData.value = { ...form.value };
     fotoUrl.value = u.foto_url;
+    fotoPreview.value = u.foto_url; // ✅ vista previa inicial
   } catch (err) {
     console.error("❌ Error cargando perfil:", err.response?.data || err);
   }
