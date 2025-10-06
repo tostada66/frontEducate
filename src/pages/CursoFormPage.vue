@@ -89,18 +89,6 @@
             autogrow
           />
 
-          <!-- Estado (solo en edición) -->
-          <q-select
-            v-if="isEdit"
-            v-model="form.estado"
-            :options="['borrador', 'publicado', 'archivado']"
-            label="Estado"
-            outlined
-            dense
-            behavior="menu"
-            popup-content-class="select-popup"
-          />
-
           <!-- Botones -->
           <div class="row justify-end q-gutter-sm q-mt-md">
             <q-btn
@@ -133,13 +121,12 @@ const router = useRouter();
 const isEdit = !!route.params.idcurso;
 const loading = ref(false);
 
-// Datos del formulario
+// Datos del formulario (sin estado)
 const form = ref({
   nombre: "",
   descripcion: "",
   nivel: "",
   idcategoria: null,
-  estado: "borrador",
 });
 
 // Imagen
@@ -180,7 +167,6 @@ async function loadCurso() {
       descripcion: data.descripcion,
       nivel: data.nivel,
       idcategoria: data.idcategoria,
-      estado: data.estado,
     };
     if (data.imagen_url) {
       previewUrl.value = data.imagen_url;
@@ -199,22 +185,17 @@ async function saveCurso() {
     fd.append("descripcion", form.value.descripcion);
     fd.append("nivel", form.value.nivel);
     fd.append("idcategoria", form.value.idcategoria);
-    if (isEdit) fd.append("estado", form.value.estado);
     if (imagenFile.value) fd.append("imagen", imagenFile.value);
 
     if (isEdit) {
       await api.post(`/cursos/${route.params.idcurso}?_method=PATCH`, fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-
-      // 👉 si es edición volvemos a la lista
       router.push({ name: "cursos-list" });
     } else {
       const { data } = await api.post("/cursos", fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-
-      // 👉 redirigir directo a crear unidad del curso recién creado
       const newId = data.curso?.idcurso;
       if (newId) {
         router.push({ name: "unidad-create", params: { idcurso: newId } });
@@ -236,7 +217,6 @@ onMounted(() => {
 </script>
 
 <style>
-/* Ajusta el alto de todos los selects */
 .select-popup {
   max-height: 250px;
   overflow-y: auto;

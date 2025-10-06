@@ -1,219 +1,327 @@
 <template>
-  <q-page class="q-pa-md flex flex-center">
-    <q-card class="q-pa-lg" style="max-width: 720px; width: 100%">
-      <q-card-section>
-        <div class="text-h5 text-weight-bold">Crear cuenta</div>
-        <div class="text-grey-7">Regístrate para empezar a aprender</div>
-      </q-card-section>
+  <q-page class="register-page">
+    <!-- Fondo animado con burbujas -->
+    <div class="bubble-bg">
+      <div class="bubble bubble-1"></div>
+      <div class="bubble bubble-2"></div>
+      <div class="bubble bubble-3"></div>
+      <div class="bubble bubble-4"></div>
+    </div>
 
-      <!-- ✅ Mensajes -->
-      <q-card-section v-if="successMsg">
-        <q-banner rounded class="bg-green-1 text-green-9">
-          {{ successMsg }}
-        </q-banner>
-      </q-card-section>
+    <!-- Ondas de fondo -->
+    <div class="wave-bg">
+      <div class="wave"></div>
+    </div>
 
-      <q-card-section v-if="errors.general">
-        <q-banner rounded class="bg-red-1 text-red-9">
-          {{ errors.general }}
-        </q-banner>
-      </q-card-section>
+    <!-- Contenedor principal -->
+    <div class="register-container">
+      <!-- Header -->
+      <div class="register-header">
+        <div class="logo">👤</div>
+        <h1 class="register-title">Crear cuenta</h1>
+        <p class="register-subtitle">Regístrate para empezar a aprender</p>
+      </div>
 
-      <!-- ✅ Formulario -->
-      <q-form @submit.prevent="onSubmit" class="q-gutter-md">
-        <q-card-section class="row q-col-gutter-md">
-          <!-- Nombres -->
-          <div class="col-12 col-sm-6">
-            <q-input
-              v-model.trim="form.nombres"
-              label="Nombres *"
-              :error="!!fe.nombres"
-              :error-message="fe.nombres"
-              dense
-              outlined
-              clearable
-              @blur="touch('nombres')"
-            />
+      <!-- Banner éxito -->
+      <div v-if="successMsg" class="banner-success">
+        {{ successMsg }}
+      </div>
+
+      <!-- Banner error -->
+      <div v-if="errors.general" class="banner-error">
+        {{ errors.general }}
+      </div>
+
+      <!-- Formulario -->
+      <q-form @submit.prevent="onSubmit" class="register-form">
+        <!-- Fila 1: Nombres y Apellidos -->
+        <div class="form-row">
+          <div class="form-group">
+            <div class="input-wrapper">
+              <q-input
+                v-model.trim="form.nombres"
+                class="custom-input"
+                :error="!!fe.nombres"
+                :error-message="fe.nombres"
+                outlined
+                @focus="nombresFocused = true"
+                @blur="
+                  nombresFocused = false;
+                  touch('nombres');
+                "
+              />
+              <label
+                class="floating-label"
+                :class="{ active: form.nombres || nombresFocused }"
+              >
+                Nombres *
+              </label>
+            </div>
           </div>
 
-          <!-- Apellidos -->
-          <div class="col-12 col-sm-6">
-            <q-input
-              v-model.trim="form.apellidos"
-              label="Apellidos *"
-              :error="!!fe.apellidos"
-              :error-message="fe.apellidos"
-              dense
-              outlined
-              clearable
-              @blur="touch('apellidos')"
-            />
+          <div class="form-group">
+            <div class="input-wrapper">
+              <q-input
+                v-model.trim="form.apellidos"
+                class="custom-input"
+                :error="!!fe.apellidos"
+                :error-message="fe.apellidos"
+                outlined
+                @focus="apellidosFocused = true"
+                @blur="
+                  apellidosFocused = false;
+                  touch('apellidos');
+                "
+              />
+              <label
+                class="floating-label"
+                :class="{ active: form.apellidos || apellidosFocused }"
+              >
+                Apellidos *
+              </label>
+            </div>
           </div>
+        </div>
 
-          <!-- Correo -->
-          <div class="col-12">
+        <!-- Campo Correo -->
+        <div class="form-group">
+          <div class="input-wrapper">
             <q-input
               v-model.trim="form.correo"
-              label="Correo *"
               type="email"
+              class="custom-input"
               :error="!!fe.correo"
               :error-message="fe.correo"
-              dense
               outlined
-              clearable
+              @focus="correoFocused = true"
+              @blur="
+                correoFocused = false;
+                touch('correo');
+              "
               @update:model-value="normalizeEmail"
-              @blur="touch('correo')"
             />
+            <label
+              class="floating-label"
+              :class="{ active: form.correo || correoFocused }"
+            >
+              Correo *
+            </label>
           </div>
+        </div>
 
-          <!-- Nombre usuario -->
-          <div class="col-12">
+        <!-- Campo Nombre de Usuario -->
+        <div class="form-group">
+          <div class="input-wrapper">
             <q-input
               v-model.trim="form.nombreusuario"
-              label="Nombre de usuario *"
-              hint="3–20: letras, números, punto o guión bajo"
+              class="custom-input"
               :error="!!fe.nombreusuario"
               :error-message="fe.nombreusuario"
-              dense
               outlined
-              clearable
+              @focus="nombreusuarioFocused = true"
+              @blur="
+                nombreusuarioFocused = false;
+                touch('nombreusuario');
+              "
               @update:model-value="sanitizeUsername"
-              @blur="touch('nombreusuario')"
             />
+            <label
+              class="floating-label"
+              :class="{ active: form.nombreusuario || nombreusuarioFocused }"
+            >
+              Nombre de usuario *
+            </label>
+            <div class="field-hint">
+              3–20: letras, números, punto o guión bajo
+            </div>
           </div>
+        </div>
 
-          <!-- Teléfono -->
-          <div class="col-12">
+        <!-- Campo Teléfono -->
+        <div class="form-group">
+          <div class="input-wrapper">
             <q-input
               v-model.trim="form.telefono"
-              label="Teléfono * (ej: +59170000001)"
+              class="custom-input"
               :error="!!fe.telefono"
               :error-message="fe.telefono"
-              dense
               outlined
-              clearable
-              @blur="touch('telefono')"
+              @focus="telefonoFocused = true"
+              @blur="
+                telefonoFocused = false;
+                touch('telefono');
+              "
             />
-          </div>
-
-          <!-- Password -->
-          <div class="col-12 col-sm-6">
-            <q-input
-              v-model="form.password"
-              :type="showPass ? 'text' : 'password'"
-              label="Contraseña *"
-              :error="!!fe.password"
-              :error-message="fe.password"
-              dense
-              outlined
-              @blur="touch('password')"
+            <label
+              class="floating-label"
+              :class="{ active: form.telefono || telefonoFocused }"
             >
-              <template #append>
-                <q-icon
-                  :name="showPass ? 'visibility_off' : 'visibility'"
-                  class="cursor-pointer"
-                  @click="showPass = !showPass"
-                />
-              </template>
-            </q-input>
+              Teléfono * (ej: +59170000001)
+            </label>
+          </div>
+        </div>
+
+        <!-- Fila 2: Contraseñas -->
+        <div class="form-row">
+          <div class="form-group">
+            <div class="input-wrapper">
+              <q-input
+                v-model="form.password"
+                :type="showPass ? 'text' : 'password'"
+                class="custom-input"
+                :error="!!fe.password"
+                :error-message="fe.password"
+                outlined
+                @focus="passwordFocused = true"
+                @blur="
+                  passwordFocused = false;
+                  touch('password');
+                "
+              >
+                <template #append>
+                  <q-btn
+                    flat
+                    dense
+                    round
+                    :icon="showPass ? 'visibility_off' : 'visibility'"
+                    @click="showPass = !showPass"
+                    class="password-toggle-btn"
+                  />
+                </template>
+              </q-input>
+              <label
+                class="floating-label"
+                :class="{ active: form.password || passwordFocused }"
+              >
+                Contraseña *
+              </label>
+            </div>
           </div>
 
-          <!-- Confirmar Password -->
-          <div class="col-12 col-sm-6">
-            <q-input
-              v-model="form.password_confirmation"
-              :type="showConfirm ? 'text' : 'password'"
-              label="Confirmar contraseña *"
-              :error="!!fe.password_confirmation"
-              :error-message="fe.password_confirmation"
-              dense
-              outlined
-              @blur="touch('password_confirmation')"
-            >
-              <template #append>
-                <q-icon
-                  :name="showConfirm ? 'visibility_off' : 'visibility'"
-                  class="cursor-pointer"
-                  @click="showConfirm = !showConfirm"
-                />
-              </template>
-            </q-input>
+          <div class="form-group">
+            <div class="input-wrapper">
+              <q-input
+                v-model="form.password_confirmation"
+                :type="showConfirm ? 'text' : 'password'"
+                class="custom-input"
+                :error="!!fe.password_confirmation"
+                :error-message="fe.password_confirmation"
+                outlined
+                @focus="passwordConfirmFocused = true"
+                @blur="
+                  passwordConfirmFocused = false;
+                  touch('password_confirmation');
+                "
+              >
+                <template #append>
+                  <q-btn
+                    flat
+                    dense
+                    round
+                    :icon="showConfirm ? 'visibility_off' : 'visibility'"
+                    @click="showConfirm = !showConfirm"
+                    class="password-toggle-btn"
+                  />
+                </template>
+              </q-input>
+              <label
+                class="floating-label"
+                :class="{
+                  active: form.password_confirmation || passwordConfirmFocused,
+                }"
+              >
+                Confirmar contraseña *
+              </label>
+            </div>
           </div>
+        </div>
 
-          <!-- Rol -->
-          <div class="col-12">
+        <!-- Campo Rol -->
+        <div class="form-group">
+          <div class="input-wrapper">
             <q-input
               v-model="roleLabel"
-              label="Rol *"
-              dense
-              outlined
-              readonly
+              class="custom-input clickable-input"
               :error="!!fe.idrol"
               :error-message="fe.idrol"
+              outlined
+              readonly
               @click="showRoleDialog = true"
             >
               <template #append>
-                <q-icon name="arrow_drop_down" class="cursor-pointer" />
+                <q-btn
+                  flat
+                  dense
+                  round
+                  icon="arrow_drop_down"
+                  @click="showRoleDialog = true"
+                  class="dropdown-btn"
+                />
               </template>
             </q-input>
+            <label class="floating-label" :class="{ active: roleLabel }">
+              Rol *
+            </label>
           </div>
-        </q-card-section>
+        </div>
 
-        <q-card-actions align="right" class="q-pa-md">
-          <q-btn flat label="Volver" color="grey-7" to="/" />
+        <!-- Botones -->
+        <div class="button-group">
+          <q-btn flat label="VOLVER" to="/" class="back-button" no-caps />
+
           <q-btn
             unelevated
-            color="primary"
-            label="Crear cuenta"
+            label="CREAR CUENTA"
             type="submit"
             :loading="loading"
             :disable="loading || !canSubmit"
+            class="submit-button"
+            no-caps
           />
-        </q-card-actions>
+        </div>
       </q-form>
-    </q-card>
+    </div>
 
     <!-- Modal: Seleccionar Rol -->
     <q-dialog v-model="showRoleDialog">
-      <q-card style="max-width: 600px; width: 100%">
-        <q-card-section>
-          <div class="text-h6 text-center">Elige tu rol</div>
-        </q-card-section>
-
-        <q-card-section class="row q-col-gutter-md">
-          <div class="col-12 col-sm-6">
-            <q-card
-              class="cursor-pointer q-hoverable"
-              @click="selectRole(1, 'Estudiante')"
-            >
-              <q-card-section>
-                <div class="text-h6">Estudiante</div>
-                <div class="text-caption text-grey-7">
-                  Explora cursos, aprende nuevas habilidades y obtén
-                  certificados.
-                </div>
-              </q-card-section>
-            </q-card>
+      <div class="role-modal-overlay">
+        <div class="role-modal-container">
+          <!-- Header del Modal -->
+          <div class="role-modal-header">
+            <h2 class="role-modal-title">Elige tu rol</h2>
           </div>
-          <div class="col-12 col-sm-6">
-            <q-card
-              class="cursor-pointer q-hoverable"
-              @click="selectRole(2, 'Profesor')"
-            >
-              <q-card-section>
-                <div class="text-h6">Profesor</div>
-                <div class="text-caption text-grey-7">
-                  Crea cursos, comparte contenidos y evalúa estudiantes.
-                </div>
-              </q-card-section>
-            </q-card>
-          </div>
-        </q-card-section>
 
-        <q-card-actions align="right">
-          <q-btn flat label="Cancelar" v-close-popup />
-        </q-card-actions>
-      </q-card>
+          <!-- Opciones de Rol -->
+          <div class="role-options">
+            <div class="role-card" @click="selectRole(1, 'Estudiante')">
+              <div class="role-icon">🎓</div>
+              <h3 class="role-name">Estudiante</h3>
+              <p class="role-description">
+                Explora cursos, aprende nuevas habilidades y obtén certificados.
+              </p>
+            </div>
+
+            <div class="role-card" @click="selectRole(2, 'Profesor')">
+              <div class="role-icon">👨‍🏫</div>
+              <h3 class="role-name">Profesor</h3>
+              <p class="role-description">
+                Crea cursos, comparte contenidos y evalúa estudiantes.
+              </p>
+            </div>
+          </div>
+
+          <!-- Botón Cancelar -->
+          <div class="role-modal-actions">
+            <q-btn
+              flat
+              label="CANCELAR"
+              v-close-popup
+              class="cancel-button"
+              no-caps
+            />
+          </div>
+        </div>
+      </div>
     </q-dialog>
   </q-page>
 </template>
@@ -236,6 +344,16 @@ const successMsg = ref("");
 
 const showRoleDialog = ref(false);
 const roleLabel = ref("");
+
+// 👇 SOLO AGREGUÉ ESTAS VARIABLES PARA LOS LABELS FLOTANTES
+const nombresFocused = ref(false);
+const apellidosFocused = ref(false);
+const correoFocused = ref(false);
+const nombreusuarioFocused = ref(false);
+const telefonoFocused = ref(false);
+const passwordFocused = ref(false);
+const passwordConfirmFocused = ref(false);
+const rolFocused = ref(false);
 
 // 👉 Formulario
 const form = reactive({
@@ -425,9 +543,599 @@ async function onSubmit() {
   }
 }
 </script>
+<style lang="scss" scoped>
+// Variables de colores
+$primary: #b83a2d;
+$accent: #ff6b6b;
+$secondary: #ecf0f1;
+$neutral: #7f8c8d;
+$bg-dark: #111836;
+$bg-card: #19193b;
+$warning: #f39c12;
 
-<style scoped>
-.q-page {
-  background: #0f1324;
+.register-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $bg-dark;
+  position: relative;
+  overflow-x: hidden;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  padding: 2rem 0;
+}
+
+// Fondo animado con burbujas
+.bubble-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.bubble {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.1;
+  animation: bubbleFloat 20s infinite ease-in-out;
+
+  &.bubble-1 {
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle, $accent, $primary);
+    left: 10%;
+    animation-delay: 0s;
+  }
+
+  &.bubble-2 {
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle, $warning, $accent);
+    left: 80%;
+    animation-delay: 5s;
+  }
+
+  &.bubble-3 {
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, $primary, $bg-card);
+    left: 60%;
+    animation-delay: 10s;
+  }
+
+  &.bubble-4 {
+    width: 60px;
+    height: 60px;
+    background: radial-gradient(circle, $accent, transparent);
+    left: 30%;
+    animation-delay: 15s;
+  }
+}
+
+@keyframes bubbleFloat {
+  0%,
+  100% {
+    transform: translateY(100vh) scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.1;
+    transform: scale(1);
+  }
+  90% {
+    opacity: 0.1;
+  }
+  100% {
+    transform: translateY(-20vh) scale(1.2) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+// Ondas de fondo
+.wave-bg {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(180deg, transparent, rgba(255, 107, 107, 0.05));
+  z-index: 1;
+  pointer-events: none;
+}
+
+.wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 200%;
+  height: 100px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(184, 58, 45, 0.1),
+    transparent,
+    rgba(255, 107, 107, 0.1),
+    transparent
+  );
+  animation: wave 15s ease-in-out infinite;
+}
+
+@keyframes wave {
+  0%,
+  100% {
+    transform: translateX(-50%) rotate(0deg);
+  }
+  50% {
+    transform: translateX(-50%) rotate(180deg);
+  }
+}
+
+// Contenedor principal
+.register-container {
+  background: rgba(25, 25, 59, 0.25);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 600px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2);
+  animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+  z-index: 2;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 107, 107, 0.5),
+      transparent
+    );
+    border-radius: 20px 20px 0 0;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 40px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+// Header
+.register-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.logo {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, $primary, $accent);
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: white;
+  animation: logoSpin 2s ease-in-out infinite;
+  cursor: pointer;
+
+  &:hover {
+    animation: logoSpin 0.5s ease-in-out;
+  }
+}
+
+@keyframes logoSpin {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.1);
+  }
+}
+
+.register-title {
+  color: $secondary;
+  font-size: 1.8rem;
+  font-weight: 300;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, $secondary, $accent);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.register-subtitle {
+  color: $neutral;
+  font-size: 0.95rem;
+}
+
+// Banners
+.banner-success,
+.banner-error {
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.banner-success {
+  background: rgba(76, 175, 80, 0.15);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  color: #4caf50;
+}
+
+.banner-error {
+  background: rgba(244, 67, 54, 0.15);
+  border: 1px solid rgba(244, 67, 54, 0.3);
+  color: #f44336;
+}
+
+// Formulario
+.register-form {
+  width: 100%;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+// Input personalizado
+:deep(.custom-input) {
+  .q-field__control {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 12px !important;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:before {
+      display: none !important;
+    }
+
+    &:after {
+      display: none !important;
+    }
+  }
+
+  .q-field__native {
+    color: $secondary !important;
+    padding: 1.2rem 1rem 0.8rem !important;
+    font-size: 1rem;
+    background: transparent !important;
+  }
+
+  .q-field__control-container {
+    background: transparent !important;
+  }
+
+  input {
+    background: transparent !important;
+  }
+
+  &.q-field--focused {
+    .q-field__control {
+      border-color: $accent !important;
+      background: rgba(255, 255, 255, 0.12) !important;
+      box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.15) !important;
+      transform: translateY(-1px);
+    }
+
+    .q-field__native {
+      background: transparent !important;
+    }
+  }
+}
+
+// Input clickeable (para rol)
+:deep(.clickable-input) {
+  .q-field__control {
+    cursor: pointer !important;
+  }
+}
+
+// Label flotante personalizado
+.floating-label {
+  position: absolute;
+  top: 0.5rem;
+  left: 1rem;
+  color: $accent;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  user-select: none;
+  z-index: 1;
+  opacity: 0.9;
+
+  &.active {
+    color: $accent;
+    opacity: 1;
+  }
+}
+
+// Hint de campo
+.field-hint {
+  color: $neutral;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  margin-left: 1rem;
+  opacity: 0.8;
+}
+
+// Password toggle y dropdown
+:deep(.password-toggle-btn),
+:deep(.dropdown-btn) {
+  color: $neutral !important;
+
+  &:hover {
+    color: $accent !important;
+    background: rgba(255, 107, 107, 0.1) !important;
+  }
+}
+
+// Botones principales
+.button-group {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+:deep(.back-button) {
+  flex: 1;
+  padding: 1rem !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 12px !important;
+  color: $accent !important;
+  font-size: 0.9rem !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: $accent !important;
+    color: $primary !important;
+    transform: translateY(-1px) !important;
+  }
+}
+
+:deep(.submit-button) {
+  flex: 2;
+  padding: 1rem !important;
+  background: linear-gradient(135deg, $primary, $accent) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  color: white !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent
+    );
+    transition: left 0.6s ease;
+  }
+
+  &:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 15px 35px rgba(184, 58, 45, 0.4) !important;
+
+    &::before {
+      left: 100%;
+    }
+  }
+
+  &:active {
+    transform: translateY(0) !important;
+  }
+}
+
+// Modal de Selección de Rol
+.role-modal-overlay {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.role-modal-container {
+  background: rgba(25, 25, 59, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 25px 45px rgba(0, 0, 0, 0.3);
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 107, 107, 0.5),
+      transparent
+    );
+    border-radius: 20px 20px 0 0;
+  }
+}
+
+.role-modal-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.role-modal-title {
+  color: $secondary;
+  font-size: 1.4rem;
+  font-weight: 300;
+  background: linear-gradient(135deg, $secondary, $accent);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.role-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.role-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: $accent;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(255, 107, 107, 0.2);
+  }
+}
+
+.role-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.role-name {
+  color: $secondary;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.role-description {
+  color: $neutral;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.role-modal-actions {
+  text-align: center;
+}
+
+:deep(.cancel-button) {
+  padding: 0.75rem 2rem !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 12px !important;
+  color: $secondary !important;
+  font-size: 0.9rem !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: $neutral !important;
+    transform: translateY(-1px) !important;
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .register-container {
+    margin: 1rem;
+    padding: 2rem 1.5rem;
+    max-width: 500px;
+  }
+
+  .register-title {
+    font-size: 1.6rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .button-group {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .role-options {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .role-modal-container {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .register-page {
+    padding: 1rem 0;
+  }
+
+  .register-container {
+    margin: 0.5rem;
+    padding: 1.5rem 1rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.2rem;
+  }
+
+  .button-group {
+    margin-top: 1.5rem;
+  }
 }
 </style>

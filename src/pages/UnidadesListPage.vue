@@ -1,8 +1,8 @@
 <template>
   <q-page class="q-pa-md">
-    <!-- Encabezado -->
+    <!-- 🧭 Encabezado -->
     <div class="row items-center q-mb-md">
-      <!-- Botón volver con relleno -->
+      <!-- Botón volver -->
       <q-btn
         color="secondary"
         label="Volver a cursos"
@@ -12,15 +12,16 @@
 
       <q-space />
 
-      <!-- Título centrado, más grande y en negrita -->
+      <!-- Título -->
       <div class="text-h4 text-weight-bold text-primary text-center">
         Unidades del Curso
       </div>
 
       <q-space />
 
-      <!-- Botón nueva unidad -->
+      <!-- Botón nueva unidad (solo si curso está en borrador o rechazado) -->
       <q-btn
+        v-if="['borrador', 'rechazado'].includes(curso?.estado)"
         color="primary"
         icon="add"
         label="Nueva Unidad"
@@ -28,7 +29,7 @@
       />
     </div>
 
-    <!-- Filtro de búsqueda -->
+    <!-- 🔎 Filtro de búsqueda -->
     <div class="row q-col-gutter-md q-mb-md">
       <div class="col-12 col-md-4">
         <q-input
@@ -38,10 +39,10 @@
           debounce="300"
           placeholder="Buscar por título"
         >
-          <template v-slot:prepend>
+          <template #prepend>
             <q-icon name="search" />
           </template>
-          <template v-slot:append>
+          <template #append>
             <q-icon
               v-if="filtroTitulo"
               name="close"
@@ -53,7 +54,7 @@
       </div>
     </div>
 
-    <!-- Tabla de unidades -->
+    <!-- 📋 Tabla de unidades -->
     <q-table
       :rows="filteredUnidades"
       :columns="columns"
@@ -63,8 +64,8 @@
       :loading="loading"
       no-data-label="No hay unidades registradas"
     >
-      <!-- Foto -->
-      <template v-slot:body-cell-foto="props">
+      <!-- 📸 Imagen -->
+      <template #body-cell-foto="props">
         <q-td class="text-center">
           <q-avatar square size="42px">
             <img
@@ -78,32 +79,55 @@
         </q-td>
       </template>
 
-      <!-- Duración -->
-      <template v-slot:body-cell-duracion="props">
+      <!-- ⏱ Duración -->
+      <template #body-cell-duracion="props">
         <q-td class="text-center">
           {{ props.row.duracion_total || 0 }} min
         </q-td>
       </template>
 
-      <!-- Acciones -->
-      <template v-slot:body-cell-acciones="props">
+      <!-- 🟢 Estado con color -->
+      <template #body-cell-estado="props">
+        <q-td class="text-center">
+          <q-badge
+            :color="getEstadoColor(props.row.estado || curso?.estado)"
+            class="text-white text-weight-bold"
+          >
+            {{ props.row.estado || curso?.estado || "N/A" }}
+          </q-badge>
+        </q-td>
+      </template>
+
+      <!-- ⚙️ Acciones -->
+      <template #body-cell-acciones="props">
         <q-td class="text-center q-gutter-xs">
+          <!-- ✏️ Editar si el curso está en borrador o rechazado -->
           <q-btn
+            v-if="['borrador', 'rechazado'].includes(curso?.estado)"
             dense
             flat
             round
             icon="edit"
             color="primary"
             @click="editUnidad(props.row.idunidad)"
-          />
+          >
+            <q-tooltip>Editar unidad</q-tooltip>
+          </q-btn>
+
+          <!-- ❌ Eliminar si el curso está en borrador o rechazado -->
           <q-btn
+            v-if="['borrador', 'rechazado'].includes(curso?.estado)"
             dense
             flat
             round
             icon="delete"
             color="negative"
             @click="deleteUnidad(props.row.idunidad)"
-          />
+          >
+            <q-tooltip>Eliminar unidad</q-tooltip>
+          </q-btn>
+
+          <!-- 🎓 Ir a clases (siempre disponible) -->
           <q-btn
             dense
             flat
@@ -111,7 +135,21 @@
             icon="school"
             color="secondary"
             @click="goClases(props.row.idunidad)"
-          />
+          >
+            <q-tooltip>Ver clases</q-tooltip>
+          </q-btn>
+
+          <!-- 👁 Vista previa (ver como estudiante/profesor) -->
+          <q-btn
+            dense
+            flat
+            round
+            icon="visibility"
+            color="teal"
+            @click="verComoEstudiante(props.row.idunidad)"
+          >
+            <q-tooltip>Vista previa</q-tooltip>
+          </q-btn>
         </q-td>
       </template>
     </q-table>
@@ -129,12 +167,12 @@ const route = useRoute();
 const router = useRouter();
 
 const idcurso = route.params.idcurso;
-
+const curso = ref(null);
 const unidades = ref([]);
 const loading = ref(false);
 const filtroTitulo = ref("");
 
-// Columnas
+// 🧩 Columnas
 const columns = [
   { name: "foto", label: "Unidad", align: "center" },
   { name: "titulo", label: "Título", field: "titulo", align: "left" },
@@ -154,7 +192,7 @@ const columns = [
   { name: "acciones", label: "Acciones", align: "center" },
 ];
 
-// 🔎 Filtrar unidades por título
+// 🔎 Filtro por título
 const filteredUnidades = computed(() => {
   return unidades.value.filter((u) =>
     !filtroTitulo.value
@@ -162,6 +200,16 @@ const filteredUnidades = computed(() => {
       : u.titulo.toLowerCase().includes(filtroTitulo.value.toLowerCase())
   );
 });
+
+// 📂 Cargar curso (para saber estado)
+async function loadCurso() {
+  try {
+    const { data } = await api.get(`/cursos/${idcurso}`);
+    curso.value = data;
+  } catch (err) {
+    console.error("❌ Error cargando curso:", err);
+  }
+}
 
 // 📂 Cargar unidades
 async function loadUnidades() {
@@ -177,14 +225,13 @@ async function loadUnidades() {
   }
 }
 
+// ✏️ Crear / Editar / Eliminar / Ver / Navegación
 function goCreateUnidad() {
   router.push({ name: "unidad-create", params: { idcurso } });
 }
-
 function editUnidad(idunidad) {
   router.push({ name: "unidad-edit", params: { idcurso, idunidad } });
 }
-
 async function deleteUnidad(idunidad) {
   $q.dialog({
     title: "Confirmar",
@@ -205,16 +252,41 @@ async function deleteUnidad(idunidad) {
     }
   });
 }
-
 function goClases(idunidad) {
-  router.push({ name: "clases-list", params: { idunidad } });
+  router.push({ name: "clases-list", params: { idcurso, idunidad } });
 }
-
 function goCursos() {
   router.push({ name: "cursos-list" });
 }
 
+// 👁 Vista previa fluida
+function verComoEstudiante(idunidad) {
+  router.push({
+    name: "profesor-unidad-detalle",
+    params: { idcurso, idunidad },
+  });
+}
+
+// 🎨 Color según estado
+function getEstadoColor(estado) {
+  switch (estado) {
+    case "borrador":
+      return "grey";
+    case "en_revision":
+      return "orange";
+    case "pendiente_aceptacion":
+      return "blue";
+    case "publicado":
+      return "green";
+    case "rechazado":
+      return "red";
+    default:
+      return "grey-6";
+  }
+}
+
 onMounted(() => {
+  loadCurso();
   loadUnidades();
 });
 </script>

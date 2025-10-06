@@ -23,22 +23,61 @@
         />
 
         <!-- Campo archivo -->
-        <q-uploader
-          url=""
-          label="Subir archivo"
-          auto-upload="false"
-          accept="*/*"
-          @added="onFileChange"
-        />
-
-        <!-- Estado -->
-        <q-select
-          v-model="form.estado"
-          :options="['borrador', 'publicado']"
-          label="Estado"
+        <q-file
+          v-model="archivoFile"
+          label="Seleccionar archivo"
           outlined
           dense
-        />
+          counter
+          accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+          @update:model-value="onFileChange"
+        >
+          <template v-slot:prepend>
+            <q-icon name="attach_file" />
+          </template>
+        </q-file>
+
+        <!-- 📌 Solo si es VIDEO: portada opcional -->
+        <q-file
+          v-if="form.tipo === 'video'"
+          v-model="miniaturaFile"
+          label="Subir portada (opcional)"
+          outlined
+          dense
+          counter
+          accept="image/*"
+        >
+          <template v-slot:prepend>
+            <q-icon name="image" />
+          </template>
+        </q-file>
+
+        <!-- 📸 Preview de la portada -->
+        <div v-if="miniaturaFile" class="q-mt-md text-center">
+          <q-img
+            :src="URL.createObjectURL(miniaturaFile)"
+            style="max-width: 200px; max-height: 120px; border-radius: 8px"
+            spinner-color="primary"
+          />
+          <div class="text-caption text-grey q-mt-xs">
+            Vista previa de portada
+          </div>
+        </div>
+
+        <!-- Progreso de subida -->
+        <div v-if="uploadProgress > 0" class="q-mt-md">
+          <q-linear-progress
+            :value="uploadProgress / 100"
+            color="primary"
+            size="20px"
+            rounded
+            stripe
+            class="shadow-2"
+          />
+          <div class="text-caption text-center q-mt-sm">
+            Subiendo... {{ uploadProgress }}%
+          </div>
+        </div>
 
         <!-- Descripción -->
         <q-input
@@ -74,7 +113,6 @@ const $q = useQuasar();
 const route = useRoute();
 const router = useRouter();
 
-// 📌 Params de la ruta
 const idcurso = route.params.idcurso;
 const idunidad = route.params.idunidad;
 const idclase = route.params.idclase;
@@ -83,84 +121,116 @@ const idcontenido = route.params.idcontenido || null;
 const form = ref({
   titulo: "",
   descripcion: "",
-  tipo: "otro", // fallback
+  tipo: "documento", // fallback
   url: "",
-  estado: "borrador",
 });
 
 const archivoFile = ref(null);
+const miniaturaFile = ref(null); // portada opcional
 const loading = ref(false);
-
+const uploadProgress = ref(0);
 const isEdit = computed(() => !!idcontenido);
 
 // 📂 Detectar tipo automáticamente
-function onFileChange(files) {
-  if (files.length > 0) {
-    const file = files[0];
-    archivoFile.value = file;
+function onFileChange(file) {
+  if (file) {
     form.value.url = file.name;
-
     const mime = file.type ? file.type.toLowerCase() : "";
-    const ext = file.name.split(".").pop().toLowerCase();
 
     if (mime.startsWith("image/")) {
       form.value.tipo = "imagen";
     } else if (mime.startsWith("video/")) {
       form.value.tipo = "video";
-    } else if (mime.startsWith("audio/")) {
-      form.value.tipo = "audio";
-    } else if (ext === "pdf") {
-      form.value.tipo = "pdf";
-    } else if (["doc", "docx"].includes(ext)) {
-      form.value.tipo = "word";
-    } else if (["xls", "xlsx"].includes(ext)) {
-      form.value.tipo = "excel";
-    } else if (["ppt", "pptx"].includes(ext)) {
-      form.value.tipo = "powerpoint";
     } else {
-      form.value.tipo = "otro";
+      form.value.tipo = "documento";
     }
   } else {
-    form.value.tipo = "otro";
+    form.value.tipo = "documento";
   }
+}
+
+// 📸 Generar miniatura automática con Canvas
+async function captureThumbnail(file) {
+  return new Promise((resolve) => {
+    const video = document.createElement("video");
+    video.src = URL.createObjectURL(file);
+    video.currentTime = 1;
+
+    video.onloadeddata = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth / 2;
+      canvas.height = video.videoHeight / 2;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob((blob) => {
+        const thumbnailFile = new File([blob], "miniatura.jpg", {
+          type: "image/jpeg",
+        });
+        resolve(thumbnailFile);
+      }, "image/jpeg");
+    };
+  });
 }
 
 // 📂 Guardar contenido
 async function saveContenido() {
   loading.value = true;
+  uploadProgress.value = 0;
+
   try {
     const fd = new FormData();
     fd.append("titulo", form.value.titulo);
     fd.append("descripcion", form.value.descripcion);
     fd.append("tipo", form.value.tipo);
-    fd.append("estado", form.value.estado);
 
     if (archivoFile.value) {
       fd.append("archivo", archivoFile.value);
+
+      // 📌 Solo si es video: decidir portada
+      if (form.value.tipo === "video") {
+        if (miniaturaFile.value) {
+          fd.append("miniatura", miniaturaFile.value);
+        } else {
+          const autoThumb = await captureThumbnail(archivoFile.value);
+          fd.append("miniatura", autoThumb);
+        }
+      }
     }
 
-    if (isEdit.value) {
-      await api.post(
-        `/cursos/${idcurso}/unidades/${idunidad}/clases/${idclase}/contenidos/${idcontenido}?_method=PATCH`,
-        fd,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
-      $q.notify({ type: "positive", message: "Contenido actualizado" });
-    } else {
-      await api.post(
-        `/cursos/${idcurso}/unidades/${idunidad}/clases/${idclase}/contenidos`,
-        fd,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
-      $q.notify({ type: "positive", message: "Contenido creado" });
-    }
+    const url = isEdit.value
+      ? `/cursos/${idcurso}/unidades/${idunidad}/clases/${idclase}/contenidos/${idcontenido}?_method=PATCH`
+      : `/cursos/${idcurso}/unidades/${idunidad}/clases/${idclase}/contenidos`;
+
+    await api.post(url, fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+      timeout: 10 * 60 * 1000,
+      onUploadProgress: (e) => {
+        if (e.total) {
+          uploadProgress.value = Math.round((e.loaded * 100) / e.total);
+        }
+      },
+    });
+
+    $q.notify({
+      type: "positive",
+      message: isEdit.value
+        ? "Contenido actualizado correctamente"
+        : "Contenido creado correctamente",
+    });
 
     goBack();
   } catch (err) {
-    $q.notify({ type: "negative", message: "Error guardando contenido" });
-    console.error(err);
+    console.error("❌ ERROR COMPLETO:", err.response?.data || err);
+    $q.notify({
+      type: "negative",
+      message: "Error guardando contenido",
+      icon: "report_problem",
+      position: "top",
+    });
   } finally {
     loading.value = false;
+    uploadProgress.value = 0;
   }
 }
 
@@ -179,7 +249,12 @@ onMounted(async () => {
       const { data } = await api.get(
         `/cursos/${idcurso}/unidades/${idunidad}/clases/${idclase}/contenidos/${idcontenido}`
       );
-      form.value = data;
+      form.value = {
+        titulo: data.titulo,
+        descripcion: data.descripcion,
+        tipo: data.tipo,
+        url: data.url,
+      };
     } catch (err) {
       console.error(err);
       $q.notify({ type: "negative", message: "Error cargando contenido" });

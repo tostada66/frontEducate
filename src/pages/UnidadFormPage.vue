@@ -72,17 +72,6 @@
             />
           </div>
 
-          <!-- Estado -->
-          <q-select
-            v-model="form.estado"
-            :options="['borrador', 'publicado']"
-            label="Estado"
-            outlined
-            dense
-            behavior="menu"
-            popup-content-class="select-popup"
-          />
-
           <!-- Botones -->
           <div class="row justify-end q-gutter-sm q-mt-md">
             <q-btn
@@ -116,12 +105,11 @@ const isEdit = !!route.params.idunidad;
 const loading = ref(false);
 const idcurso = route.params.idcurso;
 
-// Datos del formulario
+// Datos del formulario (sin estado)
 const form = ref({
   titulo: "",
   descripcion: "",
   objetivos: "",
-  estado: "borrador",
 });
 
 const imagenFile = ref(null);
@@ -146,7 +134,6 @@ async function loadUnidad() {
       titulo: data.titulo,
       descripcion: data.descripcion,
       objetivos: data.objetivos,
-      estado: data.estado,
     };
 
     if (data.imagen_url) {
@@ -165,7 +152,6 @@ async function saveUnidad() {
     fd.append("titulo", form.value.titulo);
     fd.append("descripcion", form.value.descripcion);
     fd.append("objetivos", form.value.objetivos);
-    fd.append("estado", form.value.estado);
     if (imagenFile.value) fd.append("imagen", imagenFile.value);
 
     if (isEdit) {
@@ -175,7 +161,6 @@ async function saveUnidad() {
         { headers: { "Content-Type": "multipart/form-data" } }
       );
 
-      // 👉 si es edición, volver a lista de unidades
       router.push({ name: "unidades-list", params: { idcurso } });
     } else {
       const { data } = await api.post(`/cursos/${idcurso}/unidades`, fd, {
@@ -184,7 +169,6 @@ async function saveUnidad() {
 
       const newIdUnidad = data.idunidad;
 
-      // 👉 si es nueva unidad, ir a crear clase
       if (newIdUnidad) {
         router.push({
           name: "clases-create",
@@ -207,7 +191,6 @@ onMounted(() => {
 </script>
 
 <style>
-/* Ajusta el alto del menú desplegable */
 .select-popup {
   max-height: 250px;
   overflow-y: auto;

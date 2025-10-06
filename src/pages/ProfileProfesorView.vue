@@ -3,9 +3,15 @@
     <q-card class="q-pa-lg" style="max-width: 1000px; width: 100%">
       <!-- Header -->
       <q-card-section>
-        <div class="text-h6 text-center text-primary">Mi Perfil - Profesor</div>
+        <div class="text-h6 text-center text-primary">
+          {{ isAdminView ? "Perfil de Profesor" : "Mi Perfil - Profesor" }}
+        </div>
         <div class="text-subtitle2 text-grey-7 text-center">
-          Información de tu cuenta como profesor
+          {{
+            isAdminView
+              ? "Visualización de datos del profesor"
+              : "Información de tu cuenta como profesor"
+          }}
         </div>
       </q-card-section>
 
@@ -23,8 +29,9 @@
             </template>
           </q-avatar>
 
+          <!-- Botón solo si es profesor propio -->
           <q-btn
-            v-if="editMode"
+            v-if="editMode && !isAdminView"
             class="q-mt-sm full-width"
             label="Cambiar foto"
             color="secondary"
@@ -47,21 +54,21 @@
             label="Nombres"
             outlined
             dense
-            :disable="!editMode"
+            :disable="!editMode || isAdminView"
           />
           <q-input
             v-model="form.apellidos"
             label="Apellidos"
             outlined
             dense
-            :disable="!editMode"
+            :disable="!editMode || isAdminView"
           />
           <q-input
             v-model="form.nombreusuario"
             label="Usuario"
             outlined
             dense
-            :disable="!editMode"
+            :disable="!editMode || isAdminView"
           />
           <q-input
             v-model="form.correo"
@@ -69,21 +76,21 @@
             type="email"
             outlined
             dense
-            :disable="!editMode"
+            :disable="!editMode || isAdminView"
           />
           <q-input
             v-model="form.telefono"
             label="Teléfono"
             outlined
             dense
-            :disable="!editMode"
+            :disable="!editMode || isAdminView"
           />
           <q-input
             v-model="form.especialidad"
             label="Especialidad"
             outlined
             dense
-            :disable="!editMode"
+            :disable="!editMode || isAdminView"
           />
         </div>
       </q-card-section>
@@ -97,21 +104,21 @@
           label="LinkedIn"
           outlined
           dense
-          :disable="!editMode"
+          :disable="!editMode || isAdminView"
         />
         <q-input
           v-model="form.github_url"
           label="GitHub"
           outlined
           dense
-          :disable="!editMode"
+          :disable="!editMode || isAdminView"
         />
         <q-input
           v-model="form.web_url"
           label="Sitio Web"
           outlined
           dense
-          :disable="!editMode"
+          :disable="!editMode || isAdminView"
         />
         <q-input
           v-model="form.bio"
@@ -119,8 +126,8 @@
           type="textarea"
           outlined
           dense
-          :disable="!editMode"
           autogrow
+          :disable="!editMode || isAdminView"
         />
       </q-card-section>
 
@@ -134,14 +141,14 @@
           label="Dirección"
           outlined
           dense
-          :disable="!editMode"
+          :disable="!editMode || isAdminView"
         />
         <q-input
           v-model="form.pais"
           label="País"
           outlined
           dense
-          :disable="!editMode"
+          :disable="!editMode || isAdminView"
         />
       </q-card-section>
 
@@ -157,14 +164,14 @@
           label="Empresa"
           outlined
           dense
-          :disable="!editMode"
+          :disable="!editMode || isAdminView"
         />
         <q-input
           v-model="form.cargo"
           label="Cargo"
           outlined
           dense
-          :disable="!editMode"
+          :disable="!editMode || isAdminView"
         />
         <div class="row q-col-gutter-md">
           <div class="col-6">
@@ -174,7 +181,7 @@
               label="Fecha inicio"
               outlined
               dense
-              :disable="!editMode"
+              :disable="!editMode || isAdminView"
             />
           </div>
           <div class="col-6">
@@ -184,7 +191,7 @@
               label="Fecha fin"
               outlined
               dense
-              :disable="!editMode"
+              :disable="!editMode || isAdminView"
             />
           </div>
         </div>
@@ -194,35 +201,56 @@
           type="textarea"
           outlined
           dense
-          :disable="!editMode"
           autogrow
+          :disable="!editMode || isAdminView"
         />
       </q-card-section>
 
       <!-- Botones -->
       <q-card-actions align="right">
-        <q-btn
-          v-if="!editMode"
-          label="Editar perfil"
-          color="primary"
-          icon="edit"
-          @click="editMode = true"
-        />
-        <q-btn
-          v-else
-          label="Guardar cambios"
-          color="positive"
-          icon="save"
-          :loading="loading"
-          @click="updateProfile"
-        />
-        <q-btn
-          v-if="editMode"
-          flat
-          label="Cancelar"
-          color="grey-7"
-          @click="cancelEdit"
-        />
+        <!-- Vista profesor -->
+        <template v-if="!isAdminView">
+          <q-btn
+            v-if="!editMode"
+            label="Editar perfil"
+            color="primary"
+            icon="edit"
+            @click="editMode = true"
+          />
+          <q-btn
+            v-if="editMode"
+            label="Guardar cambios"
+            color="positive"
+            icon="save"
+            :loading="loading"
+            @click="updateProfile"
+          />
+          <q-btn
+            v-if="editMode"
+            flat
+            label="Cancelar"
+            color="grey-7"
+            @click="cancelEdit"
+          />
+        </template>
+
+        <!-- Vista admin -->
+        <template v-else>
+          <q-btn
+            color="positive"
+            label="Aprobar"
+            icon="check"
+            @click="cambiarEstado('aprobado')"
+          />
+          <q-btn
+            color="negative"
+            label="Rechazar"
+            icon="close"
+            flat
+            @click="cambiarEstado('rechazado')"
+          />
+        </template>
+
         <q-btn
           flat
           label="Volver"
@@ -238,6 +266,14 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { api } from "boot/axios";
+import { useRoute, useRouter } from "vue-router";
+import { useQuasar } from "quasar";
+
+const route = useRoute();
+const router = useRouter();
+const $q = useQuasar();
+
+const isAdminView = ref(false);
 
 const form = ref({
   nombres: "",
@@ -260,7 +296,7 @@ const form = ref({
 });
 
 const fotoUrl = ref(null);
-const fotoPreview = ref(null); // para la vista previa inmediata
+const fotoPreview = ref(null);
 const loading = ref(false);
 const editMode = ref(false);
 const originalData = ref({});
@@ -274,63 +310,18 @@ const iniciales = computed(() => {
   );
 });
 
-// Input file
-const fileInput = ref(null);
-function pickFile() {
-  fileInput.value.click();
-}
-
-// 👉 Vista previa antes de guardar
-function onFileSelected(e) {
-  const file = e.target.files[0];
-  if (file) {
-    fotoPreview.value = URL.createObjectURL(file);
-    uploadFoto(file);
-  }
-}
-
-// 📂 Subir foto al backend
-async function uploadFoto(file) {
-  const fd = new FormData();
-  fd.append("foto", file);
-  try {
-    const { data } = await api.post("/me/profile/profesor/foto", fd, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    fotoUrl.value = data.user.foto_url;
-    fotoPreview.value = data.user.foto_url; // ✅ asegura vista previa
-  } catch (err) {
-    console.error("❌ Error subiendo foto:", err.response?.data || err);
-  }
-}
-
-// 📂 Guardar cambios de perfil
-async function updateProfile() {
-  loading.value = true;
-  try {
-    await api.patch("/me/profile/profesor", form.value);
-    editMode.value = false;
-    loadProfile();
-  } catch (err) {
-    console.error("❌ Error actualizando perfil:", err.response?.data || err);
-  } finally {
-    loading.value = false;
-  }
-}
-
-// 📂 Cancelar edición
-function cancelEdit() {
-  form.value = { ...originalData.value };
-  editMode.value = false;
-  fotoPreview.value = fotoUrl.value;
-}
-
-// 📂 Cargar perfil (logueado)
+// Cargar perfil
 async function loadProfile() {
   try {
-    const { data } = await api.get("/me/profile/profesor");
-    const u = data.user;
+    let resp;
+    if (route.params.idprofesor) {
+      isAdminView.value = true;
+      resp = await api.get(`/admin/profesores/${route.params.idprofesor}`);
+    } else {
+      resp = await api.get("/me/profile/profesor");
+    }
 
+    const u = resp.data.user; // 👈 ahora siempre es .user
     form.value = {
       nombres: u.nombres || "",
       apellidos: u.apellidos || "",
@@ -353,10 +344,46 @@ async function loadProfile() {
 
     originalData.value = { ...form.value };
     fotoUrl.value = u.foto_url;
-    fotoPreview.value = u.foto_url; // ✅ vista previa inicial
+    fotoPreview.value = u.foto_url;
   } catch (err) {
     console.error("❌ Error cargando perfil:", err.response?.data || err);
   }
+}
+
+// Cambiar estado (admin)
+async function cambiarEstado(estado) {
+  try {
+    await api.post(`/admin/profesores/${route.params.idprofesor}/estado`, {
+      estado,
+    });
+    $q.notify({
+      type: estado === "aprobado" ? "positive" : "warning",
+      message: `Profesor ${estado}`,
+    });
+    router.push({ name: "admin-solicitudes" });
+  } catch (err) {
+    $q.notify({ type: "negative", message: "Error al cambiar estado" });
+  }
+}
+
+// Guardar cambios (profesor)
+async function updateProfile() {
+  loading.value = true;
+  try {
+    await api.patch("/me/profile/profesor", form.value);
+    editMode.value = false;
+    loadProfile();
+  } catch (err) {
+    console.error("❌ Error actualizando perfil:", err.response?.data || err);
+  } finally {
+    loading.value = false;
+  }
+}
+
+function cancelEdit() {
+  form.value = { ...originalData.value };
+  editMode.value = false;
+  fotoPreview.value = fotoUrl.value;
 }
 
 onMounted(() => {

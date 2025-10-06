@@ -1,8 +1,7 @@
 <template>
   <q-page class="q-pa-md">
-    <!-- Encabezado -->
+    <!-- 🔹 Encabezado -->
     <div class="row items-center q-mb-md">
-      <!-- Botón volver -->
       <q-btn
         color="secondary"
         icon="arrow_back"
@@ -12,14 +11,12 @@
 
       <q-space />
 
-      <!-- Título centrado -->
       <div class="text-h4 text-weight-bold text-primary text-center">
         Mis Cursos
       </div>
 
       <q-space />
 
-      <!-- Botón nuevo curso -->
       <q-btn
         v-if="auth.isProfessor"
         color="primary"
@@ -29,10 +26,9 @@
       />
     </div>
 
-    <!-- Filtros -->
+    <!-- 🔹 Filtros -->
     <div class="row q-col-gutter-md q-mb-md">
-      <!-- Buscar por nombre -->
-      <div class="col-12 col-md-4">
+      <div class="col-12 col-md-3">
         <q-input
           v-model="filtros.nombre"
           outlined
@@ -40,10 +36,8 @@
           debounce="300"
           placeholder="Buscar por nombre"
         >
-          <template v-slot:prepend>
-            <q-icon name="search" />
-          </template>
-          <template v-slot:append>
+          <template #prepend><q-icon name="search" /></template>
+          <template #append>
             <q-icon
               v-if="filtros.nombre"
               name="close"
@@ -54,8 +48,7 @@
         </q-input>
       </div>
 
-      <!-- Filtro por nivel -->
-      <div class="col-6 col-md-3">
+      <div class="col-6 col-md-2">
         <q-select
           v-model="filtros.nivel"
           :options="niveles"
@@ -66,7 +59,6 @@
         />
       </div>
 
-      <!-- Filtro por categoría -->
       <div class="col-6 col-md-3">
         <q-select
           v-model="filtros.categoria"
@@ -82,9 +74,21 @@
           :loading="loadingCategorias"
         />
       </div>
+
+      <!-- 🟢 Filtro por estado -->
+      <div class="col-6 col-md-2">
+        <q-select
+          v-model="filtros.estado"
+          :options="estados"
+          outlined
+          dense
+          label="Estado"
+          clearable
+        />
+      </div>
     </div>
 
-    <!-- Tabla de cursos -->
+    <!-- 🔹 Tabla -->
     <q-table
       :rows="filteredCursos"
       :columns="columns"
@@ -94,49 +98,61 @@
       :loading="loading"
       no-data-label="No tienes cursos registrados"
     >
-      <!-- Foto -->
-      <template v-slot:body-cell-foto="props">
+      <!-- 🖼 Foto -->
+      <template #body-cell-foto="props">
         <q-td class="text-center">
-          <div class="row justify-center">
-            <q-avatar square size="42px">
-              <img
-                :src="
-                  props.row.imagen_url ||
-                  'https://via.placeholder.com/80x80?text=Curso'
-                "
-              />
-            </q-avatar>
-          </div>
+          <q-avatar square size="42px">
+            <img
+              :src="
+                props.row.imagen_url ||
+                'https://via.placeholder.com/80x80?text=Curso'
+              "
+            />
+          </q-avatar>
         </q-td>
       </template>
 
-      <!-- Duración -->
-      <template v-slot:body-cell-duracion="props">
-        <q-td> {{ props.row.duracion_estimada || 0 }} min </q-td>
+      <!-- ⏱ Duración -->
+      <template #body-cell-duracion="props">
+        <q-td>{{ props.row.duracion_estimada || 0 }} min</q-td>
       </template>
 
-      <!-- Acciones -->
-      <template v-slot:body-cell-acciones="props">
+      <!-- ⚙️ Acciones -->
+      <template #body-cell-acciones="props">
         <q-td class="text-center">
           <div class="row justify-center q-gutter-xs">
+            <!-- ✏️ Editar y 🗑 Eliminar si está en borrador o rechazado -->
             <q-btn
-              v-if="auth.isProfessor"
+              v-if="
+                auth.isProfessor &&
+                ['borrador', 'rechazado'].includes(props.row.estado)
+              "
               dense
               flat
               round
               icon="edit"
               color="primary"
               @click="editCurso(props.row.idcurso)"
-            />
+            >
+              <q-tooltip>Editar curso</q-tooltip>
+            </q-btn>
+
             <q-btn
-              v-if="auth.isProfessor"
+              v-if="
+                auth.isProfessor &&
+                ['borrador', 'rechazado'].includes(props.row.estado)
+              "
               dense
               flat
               round
               icon="delete"
               color="negative"
               @click="deleteCurso(props.row.idcurso)"
-            />
+            >
+              <q-tooltip>Eliminar curso</q-tooltip>
+            </q-btn>
+
+            <!-- 🎓 Ir a unidades -->
             <q-btn
               v-if="auth.isProfessor"
               dense
@@ -145,8 +161,44 @@
               icon="school"
               color="secondary"
               @click="goUnidades(props.row.idcurso)"
-            />
+            >
+              <q-tooltip>Administrar unidades</q-tooltip>
+            </q-btn>
+
+            <!-- 👁 Vista previa (ahora también más visible en rechazado) -->
+            <q-btn
+              v-if="showPreview(props.row.estado)"
+              dense
+              flat
+              round
+              icon="visibility"
+              :color="props.row.estado === 'rechazado' ? 'teal' : 'teal'"
+              size="md"
+              @click="verComoEstudiante(props.row.idcurso)"
+            >
+              <q-tooltip>
+                {{
+                  props.row.estado === "rechazado"
+                    ? "Ver detalles del curso rechazado"
+                    : props.row.estado === "borrador"
+                    ? "Vista previa del borrador"
+                    : "Ver como estudiante"
+                }}
+              </q-tooltip>
+            </q-btn>
           </div>
+        </q-td>
+      </template>
+
+      <!-- 🟣 Estado -->
+      <template #body-cell-estado="props">
+        <q-td>
+          <q-badge
+            :color="getEstadoColor(props.row.estado)"
+            class="text-white text-weight-bold"
+          >
+            {{ props.row.estado }}
+          </q-badge>
         </q-td>
       </template>
     </q-table>
@@ -169,16 +221,26 @@ const loading = ref(false);
 const categoriasOptions = ref([]);
 const loadingCategorias = ref(false);
 
-// Filtros
+// 🔍 Filtros
 const filtros = ref({
   nombre: "",
   nivel: null,
   categoria: null,
+  estado: null,
 });
 
+// 📚 Opciones
 const niveles = ["Básico", "Intermedio", "Avanzado"];
+const estados = [
+  "borrador",
+  "en_revision",
+  "oferta_enviada",
+  "pendiente_aceptacion",
+  "publicado",
+  "rechazado",
+];
 
-// Columnas
+// 🧱 Columnas
 const columns = [
   { name: "foto", label: "Foto del curso", align: "center" },
   { name: "nombre", label: "Nombre", field: "nombre", align: "left" },
@@ -199,28 +261,52 @@ const columns = [
   { name: "acciones", label: "Acciones", field: "acciones", align: "center" },
 ];
 
-// Cursos filtrados
+// 👁 Mostrar vista previa (ahora también para rechazado)
+function showPreview(estado) {
+  return [
+    "borrador",
+    "en_revision",
+    "oferta_enviada",
+    "pendiente_aceptacion",
+    "publicado",
+    "rechazado", // 👈 agregado
+  ].includes(estado);
+}
+
+// 🎨 Color del estado
+function getEstadoColor(estado) {
+  const map = {
+    borrador: "grey",
+    en_revision: "orange",
+    oferta_enviada: "blue",
+    pendiente_aceptacion: "amber",
+    publicado: "green",
+    rechazado: "red",
+  };
+  return map[estado] || "grey";
+}
+
+// 🧩 Filtro dinámico
 const filteredCursos = computed(() => {
   return cursos.value.filter((c) => {
     const matchNombre =
       !filtros.value.nombre ||
       c.nombre.toLowerCase().includes(filtros.value.nombre.toLowerCase());
-
     const matchNivel = !filtros.value.nivel || c.nivel === filtros.value.nivel;
-
     const matchCategoria =
       !filtros.value.categoria || c.idcategoria === filtros.value.categoria;
+    const matchEstado =
+      !filtros.value.estado || c.estado === filtros.value.estado;
 
-    return matchNombre && matchNivel && matchCategoria;
+    return matchNombre && matchNivel && matchCategoria && matchEstado;
   });
 });
 
-// Cargar cursos
+// 📦 Cargar cursos
 async function loadCursos() {
   loading.value = true;
   try {
     const { data } = await api.get("/cursos");
-
     cursos.value = (data.data || data).map((c) => ({
       ...c,
       categoria_nombre: c.categoria?.nombre || "Sin categoría",
@@ -228,16 +314,13 @@ async function loadCursos() {
     }));
   } catch (err) {
     console.error("❌ Error cargando cursos:", err);
-    $q.notify({
-      type: "negative",
-      message: "Error cargando cursos",
-    });
+    $q.notify({ type: "negative", message: "Error cargando cursos" });
   } finally {
     loading.value = false;
   }
 }
 
-// Cargar categorías para filtro
+// 📂 Cargar categorías
 async function loadCategorias() {
   loadingCategorias.value = true;
   try {
@@ -250,18 +333,21 @@ async function loadCategorias() {
   }
 }
 
+// 🚀 Navegación
 function editCurso(id) {
   router.push({ name: "cursos-edit", params: { idcurso: id } });
 }
-
 function goUnidades(id) {
   router.push({ name: "unidades-list", params: { idcurso: id } });
 }
-
+function verComoEstudiante(idcurso) {
+  router.push({ name: "profesor-curso-detalle", params: { idcurso } });
+}
 function goDashboard() {
   router.push({ name: "index" });
 }
 
+// 🗑 Eliminar
 async function deleteCurso(id) {
   $q.dialog({
     title: "Confirmar",
@@ -272,16 +358,10 @@ async function deleteCurso(id) {
     try {
       await api.delete(`/cursos/${id}`);
       await loadCursos();
-      $q.notify({
-        type: "positive",
-        message: "Curso eliminado correctamente",
-      });
+      $q.notify({ type: "positive", message: "Curso eliminado correctamente" });
     } catch (err) {
       console.error("❌ Error eliminando curso:", err.response?.data || err);
-      $q.notify({
-        type: "negative",
-        message: "Error eliminando curso",
-      });
+      $q.notify({ type: "negative", message: "Error eliminando curso" });
     }
   });
 }
