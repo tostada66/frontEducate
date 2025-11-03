@@ -1,22 +1,21 @@
 // src/stores/auth.js
 import { defineStore } from "pinia";
 import { api, setAuthToken, clearAuthToken } from "boot/axios";
+import { useRouter } from "vue-router";
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
     token: localStorage.getItem("token") || null,
     user: null,
     needsRole: false,
-    isReady: false, // 👈 Nuevo: controla cuándo está lista la sesión
+    isReady: false, // 🔸 Controla cuándo se puede renderizar el layout
   }),
 
   getters: {
-    isAuthed: (s) => !!s.token,
+    isAuthed: (s) => !!s.token && !!s.user,
     isProfessor: (s) => s.user?.idrol === 2, // 👨‍🏫 Profesor
     isStudent: (s) => s.user?.idrol === 1, // 🎓 Estudiante
     isAdmin: (s) => s.user?.idrol === 3, // 🛠️ Administrador
-
-    // 👉 Verifica si hay suscripción activa
     hasSubscription: (s) =>
       !!s.user?.suscripcion_activa && new Date(s.user?.fecha_fin) > new Date(),
   },
@@ -37,7 +36,8 @@ export const useAuthStore = defineStore("auth", {
         localStorage.removeItem("token");
         clearAuthToken();
       }
-      this.isReady = true; // 👈 aseguramos que el layout se muestre
+
+      this.isReady = true; // 🔹 Asegura render inmediato
     },
 
     /**
@@ -47,22 +47,37 @@ export const useAuthStore = defineStore("auth", {
       this.token = null;
       this.user = null;
       this.needsRole = false;
-      this.isReady = true; // 👈 evita que el layout parpadee
+      this.isReady = true;
+
+      // 🔥 Limpieza total de persistencia
       localStorage.removeItem("token");
+      localStorage.removeItem("auth"); // 👈 Borra el persistente del plugin
       clearAuthToken();
     },
 
-    logout() {
+    /**
+     * 🚪 Cerrar sesión (siempre limpia y redirige)
+     */
+    async logout() {
+      try {
+        // Ignora error 401 si el token ya fue invalidado
+        await api.post("/logout").catch(() => {});
+      } catch (e) {
+        console.warn("⚠️ Error cerrando sesión:", e);
+      }
+
       this.clear();
+
+      // 🔄 Forzar recarga completa para reiniciar router + store
+      window.location.href = "/#/login";
     },
 
     /**
-     * 🚀 Inicializa sesión persistente
-     * (se ejecuta al cargar la app)
+     * 🚀 Inicializa sesión persistente al cargar la app
      */
     async init() {
       if (!this.token) {
-        this.isReady = true; // 👈 importante si no hay token
+        this.isReady = true;
         return;
       }
 
@@ -78,7 +93,7 @@ export const useAuthStore = defineStore("auth", {
     },
 
     /**
-     * 🔄 Obtener usuario autenticado
+     * 👤 Obtener usuario autenticado
      */
     async fetchMe() {
       const { data } = await api.get("/me");
@@ -87,15 +102,38 @@ export const useAuthStore = defineStore("auth", {
     },
 
     /**
-     * 🔐 Iniciar sesión
+     * 🔐 Iniciar sesión (redirige según el rol)
      */
     async login(credentials) {
+      const router = useRouter();
+
       const { data } = await api.post("/login", credentials);
       this.setSession({
         token: data.token,
         user: data.user,
         needs_role: data.needs_role,
       });
+
+      // 🔹 Redirección inteligente según rol
+      // 🔹 Redirección inteligente según rol
+      switch (data.user?.idrol) {
+        case 1: // 🎓 Estudiante
+          router.replace({ name: "estudiante-dashboard" });
+          break;
+
+        case 2: // 👨‍🏫 Profesor
+          router.replace({ name: "cursos-list" });
+          break;
+
+        case 3: // 🛠️ Admin
+          router.replace({ name: "admin-dashboard" });
+          break;
+
+        default:
+          router.replace({ name: "home" });
+          break;
+      }
+
       return data;
     },
   },

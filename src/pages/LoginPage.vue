@@ -293,9 +293,22 @@ async function onSubmit() {
       needs_role: data?.needs_role,
     });
 
-    successMsg.value = "Inicio de sesión correcto.";
-    const next = typeof route.query.next === "string" ? route.query.next : null;
-    router.replace(next || { name: "index" });
+    const idrol = data?.user?.idrol;
+
+    switch (idrol) {
+      case 3: // 🛠️ Admin
+        router.replace({ name: "admin-dashboard" });
+        break;
+
+      case 2: // 👨‍🏫 Profesor
+        router.replace({ name: "cursos-list" }); // o tu vista principal de profesor
+        break;
+
+      case 1: // 🎓 Estudiante
+      default:
+        router.replace({ name: "estudiante-dashboard" });
+        break;
+    }
   } catch (e) {
     errors.general = "Credenciales inválidas o error en el servidor.";
     successMsg.value = "";

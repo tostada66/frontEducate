@@ -1,13 +1,15 @@
 <template>
-  <q-page class="q-pa-lg flex flex-center bg-grey-2">
+  <q-page class="pago-page flex flex-center q-pa-lg">
+    <!-- 🔹 Fondo dinámico -->
+    <div class="animated-bg"></div>
+
     <div class="row q-col-gutter-xl full-width justify-center">
-      <!-- Formulario de pago -->
+      <!-- 💳 Formulario de pago -->
       <div class="col-12 col-md-7">
-        <q-card class="payment-card shadow-4">
-          <!-- Título -->
-          <q-card-section class="text-center">
-            <q-icon name="credit_card" size="48px" color="primary" />
-            <div class="text-h5 text-primary text-bold">Pago con Tarjeta</div>
+        <q-card class="payment-card shadow-6">
+          <q-card-section class="text-center q-pb-sm">
+            <q-icon name="credit_card" size="48px" color="morado" />
+            <div class="text-h5 text-bold titulo-pago">Pago con Tarjeta</div>
             <div class="text-subtitle2 text-grey-7">
               Completa los datos de tu tarjeta para finalizar la suscripción
             </div>
@@ -15,9 +17,8 @@
 
           <q-separator />
 
-          <!-- Formulario -->
+          <!-- 🧾 Formulario -->
           <q-form @submit.prevent="procesarPago" class="q-pa-md">
-            <!-- Nombre -->
             <q-input
               v-model="form.nombre"
               label="Nombre completo en la tarjeta"
@@ -25,10 +26,11 @@
               dense
               class="q-mb-md"
             >
-              <template v-slot:prepend><q-icon name="person" /></template>
+              <template v-slot:prepend>
+                <q-icon name="person" color="morado" />
+              </template>
             </q-input>
 
-            <!-- Número -->
             <q-input
               v-model="form.numero"
               label="Número de tarjeta"
@@ -37,10 +39,11 @@
               dense
               class="q-mb-md"
             >
-              <template v-slot:prepend><q-icon name="credit_card" /></template>
+              <template v-slot:prepend>
+                <q-icon name="credit_card" color="morado" />
+              </template>
             </q-input>
 
-            <!-- Tipo -->
             <q-select
               v-model="form.tipo"
               :options="['Visa', 'MasterCard', 'Amex']"
@@ -49,10 +52,12 @@
               dense
               class="q-mb-md"
             >
-              <template v-slot:prepend><q-icon name="style" /></template>
+              <template v-slot:prepend>
+                <q-icon name="style" color="morado" />
+              </template>
             </q-select>
 
-            <!-- Expiración y CVV -->
+            <!-- Fecha y CVV -->
             <div class="row q-col-gutter-md q-mb-md">
               <div class="col-4">
                 <q-input
@@ -62,7 +67,9 @@
                   outlined
                   dense
                 >
-                  <template v-slot:prepend><q-icon name="event" /></template>
+                  <template v-slot:prepend>
+                    <q-icon name="event" color="morado" />
+                  </template>
                 </q-input>
               </div>
               <div class="col-4">
@@ -73,7 +80,9 @@
                   outlined
                   dense
                 >
-                  <template v-slot:prepend><q-icon name="event" /></template>
+                  <template v-slot:prepend>
+                    <q-icon name="event" color="morado" />
+                  </template>
                 </q-input>
               </div>
               <div class="col-4">
@@ -85,7 +94,9 @@
                   outlined
                   dense
                 >
-                  <template v-slot:prepend><q-icon name="lock" /></template>
+                  <template v-slot:prepend>
+                    <q-icon name="lock" color="morado" />
+                  </template>
                 </q-input>
               </div>
             </div>
@@ -100,15 +111,17 @@
               dense
               class="q-mb-md q-mt-md"
             >
-              <template v-slot:prepend><q-icon name="home" /></template>
+              <template v-slot:prepend>
+                <q-icon name="home" color="morado" />
+              </template>
             </q-input>
 
             <div class="row q-col-gutter-md q-mb-md">
               <div class="col-6">
                 <q-input v-model="form.ciudad" label="Ciudad" outlined dense>
-                  <template v-slot:prepend
-                    ><q-icon name="location_city"
-                  /></template>
+                  <template v-slot:prepend>
+                    <q-icon name="location_city" color="morado" />
+                  </template>
                 </q-input>
               </div>
               <div class="col-6">
@@ -118,14 +131,13 @@
                   outlined
                   dense
                 >
-                  <template v-slot:prepend
-                    ><q-icon name="markunread_mailbox"
-                  /></template>
+                  <template v-slot:prepend>
+                    <q-icon name="markunread_mailbox" color="morado" />
+                  </template>
                 </q-input>
               </div>
             </div>
 
-            <!-- País -->
             <q-select
               v-model="form.pais"
               :options="['Bolivia', 'Argentina', 'Chile', 'Perú']"
@@ -134,12 +146,16 @@
               dense
               class="q-mb-md"
             >
-              <template v-slot:prepend><q-icon name="public" /></template>
+              <template v-slot:prepend>
+                <q-icon name="public" color="morado" />
+              </template>
             </q-select>
 
-            <!-- Datos de factura -->
+            <!-- Factura -->
             <q-separator />
-            <div class="text-subtitle1 text-bold text-primary q-mt-md q-mb-sm">
+            <div
+              class="text-subtitle1 text-bold factura-titulo q-mt-md q-mb-sm"
+            >
               Datos para la Factura
             </div>
 
@@ -150,7 +166,9 @@
               dense
               class="q-mb-md"
             >
-              <template v-slot:prepend><q-icon name="badge" /></template>
+              <template v-slot:prepend>
+                <q-icon name="badge" color="morado" />
+              </template>
             </q-input>
 
             <q-input
@@ -160,31 +178,35 @@
               dense
               class="q-mb-md"
             >
-              <template v-slot:prepend><q-icon name="business" /></template>
+              <template v-slot:prepend>
+                <q-icon name="business" color="morado" />
+              </template>
             </q-input>
 
             <!-- Botón -->
             <div class="q-mt-lg text-center">
               <q-btn
                 label="PAGAR AHORA"
-                color="primary"
+                class="btn-pagar"
                 size="lg"
                 rounded
                 unelevated
                 type="submit"
-                class="full-width"
+                style="width: 100%"
+                :loading="loading"
               />
             </div>
           </q-form>
         </q-card>
       </div>
 
-      <!-- Resumen de plan -->
+      <!-- 📋 Resumen -->
       <div class="col-12 col-md-4">
-        <q-card class="plan-summary shadow-3">
+        <q-card class="plan-summary shadow-5">
           <q-card-section>
-            <div class="text-h6 text-bold text-primary">
-              <q-icon name="assignment" class="q-mr-sm" /> Resumen del Plan
+            <div class="text-h6 text-bold titulo-resumen">
+              <q-icon name="assignment" class="q-mr-sm" color="morado" />
+              Resumen del Plan
             </div>
             <div class="text-subtitle2 text-grey-7">
               Revisa los detalles antes de pagar
@@ -194,7 +216,7 @@
           <q-separator />
 
           <q-card-section v-if="plan">
-            <div class="text-subtitle1 q-mb-sm">
+            <div class="text-subtitle1 q-mb-sm text-dark">
               <q-icon name="star" color="amber" size="20px" class="q-mr-xs" />
               {{ plan.nombre }}
             </div>
@@ -208,7 +230,10 @@
 
           <q-separator />
 
-          <q-card-section class="text-h6 text-right text-bold" v-if="plan">
+          <q-card-section
+            class="text-h6 text-right text-bold text-dark"
+            v-if="plan"
+          >
             Total a pagar: Bs. {{ plan.precio }}
           </q-card-section>
         </q-card>
@@ -220,18 +245,13 @@
 <script setup>
 import { ref } from "vue";
 import { useQuasar } from "quasar";
-import { useRouter } from "vue-router";
-import { api } from "boot/axios";
-import { useAuthStore } from "src/stores/auth";
 import { useSuscripcionStore } from "src/stores/suscripcion";
 
 const $q = useQuasar();
-const router = useRouter();
-const auth = useAuthStore();
 const suscripcionStore = useSuscripcionStore();
 
-// 👉 plan elegido desde Pinia
 const plan = suscripcionStore.selectedPlan;
+const loading = ref(false);
 
 const form = ref({
   nombre: "",
@@ -249,39 +269,102 @@ const form = ref({
 });
 
 async function procesarPago() {
+  loading.value = true;
   try {
-    const { data } = await api.post("/suscripciones/pagar", {
-      idplan: plan.idplan,
-      idpago: suscripcionStore.selectedTipoPago?.idpago,
-      nit: form.value.nit || null,
-      razon_social: form.value.razon_social || null,
-      nombre_factura: form.value.nombre || null,
+    // Guarda los datos de factura en el store antes de procesar
+    suscripcionStore.setPaymentData({
+      nombre: form.value.nombre,
+      nit: form.value.nit,
+      razon_social: form.value.razon_social,
     });
 
-    // ✅ Actualizar auth.user con el usuario actualizado del backend
-    if (data.user) {
-      auth.user = { ...data.user };
-    }
+    await suscripcionStore.procesarSuscripcion();
 
     $q.notify({ type: "positive", message: "Pago procesado con éxito ✅" });
-
-    router.push({
-      name: "pago-exito",
-      params: { id: data.factura.idfactura },
-    });
   } catch (err) {
     console.error("❌ Error procesando pago:", err);
-    $q.notify({ type: "negative", message: "Error al procesar el pago" });
+    $q.notify({
+      type: "negative",
+      message:
+        err.response?.data?.message ||
+        "Error al procesar el pago, revisa los datos.",
+    });
+  } finally {
+    loading.value = false;
   }
 }
 </script>
 
 <style scoped>
-.payment-card {
-  width: 100%;
-  border-radius: 16px;
+.pago-page {
+  background: radial-gradient(circle at 25% 25%, #0a0f1d, #030712 80%);
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
 }
+.animated-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.animated-bg::before,
+.animated-bg::after {
+  content: "";
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.6;
+  animation: float 18s ease-in-out infinite alternate;
+}
+.animated-bg::before {
+  top: 10%;
+  left: 15%;
+  background: radial-gradient(circle, rgba(255, 77, 109, 0.9), transparent 70%);
+}
+.animated-bg::after {
+  bottom: 10%;
+  right: 15%;
+  background: radial-gradient(circle, rgba(0, 255, 200, 0.8), transparent 70%);
+}
+@keyframes float {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(40px, -40px) scale(1.1);
+  }
+  100% {
+    transform: translate(-30px, 30px) scale(1);
+  }
+}
+
+.payment-card,
 .plan-summary {
-  border-radius: 16px;
+  background: #ffffff;
+  border-radius: 18px;
+  color: #222;
+}
+.titulo-pago,
+.titulo-resumen {
+  color: #6c4ab6;
+}
+.factura-titulo {
+  color: #ff4d6d;
+}
+:deep(.q-icon[color="morado"]) {
+  color: #6c4ab6 !important;
+}
+.btn-pagar {
+  background: #ff4d6d;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 0 20px rgba(255, 77, 109, 0.5);
+  transition: all 0.3s ease;
+}
+.btn-pagar:hover {
+  background: #e63f5d;
+  box-shadow: 0 0 30px rgba(255, 77, 109, 0.7);
 }
 </style>

@@ -3,10 +3,10 @@ import { boot } from "quasar/wrappers";
 import axios from "axios";
 
 const baseURL = import.meta.env.DEV
-  ? "http://127.0.0.1:8000/api" // 👈 ajusta si usas proxy "/api"
+  ? "http://127.0.0.1:8000/api"
   : import.meta.env.VITE_API_BASE_URL || "https://api.tu-dominio.com/api";
 
-// 🔧 Instancia de Axios
+// 🔧 Instancia principal de Axios
 export const api = axios.create({
   baseURL,
   withCredentials: false,
@@ -17,7 +17,7 @@ export const api = axios.create({
   timeout: 15000,
 });
 
-// ✅ Guardar token en axios + localStorage
+// ✅ Guardar token
 export function setAuthToken(token) {
   if (token) {
     api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -33,42 +33,63 @@ export function clearAuthToken() {
   localStorage.removeItem("token");
 }
 
-// 🔎 Interceptor de request → añade token si existe
+// 🔎 Interceptor de request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) config.headers["Authorization"] = `Bearer ${token}`;
   return config;
 });
 
-// 🚨 Interceptor de response → captura 401 y redirige a login
+// 🚨 Interceptor de response
 let redirectingToLogin = false;
 
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
     const status = error?.response?.status;
+    const url = error?.config?.url || "";
 
+    // ⚠️ 1️⃣ Ignorar 401 del logout → no hacer nada
+    if (status === 401 && url.includes("/logout")) {
+      console.info("[AUTH] Logout ya procesado, ignorando 401.");
+      return Promise.resolve({ data: { message: "Sesión cerrada" } });
+    }
+
+    // ⚠️ 2️⃣ Cualquier otro 401 → sesión inválida o expirada
     if (status === 401) {
+      console.warn("[AUTH] Sesión expirada o no autorizada.");
+
       try {
-        // 🔥 logout desde Pinia
         const { useAuthStore } = await import("src/stores/auth");
-        useAuthStore().logout?.();
-      } catch {
+        const auth = useAuthStore();
+
+        if (auth.token) {
+          auth.clear(); // Limpia el store
+        } else {
+          clearAuthToken();
+        }
+      } catch (e) {
+        console.error("[AUTH] Error limpiando sesión tras 401:", e);
         clearAuthToken();
       }
 
-      try {
-        if (!redirectingToLogin) {
-          redirectingToLogin = true;
+      // 🚪 Redirigir solo una vez al login
+      if (!redirectingToLogin) {
+        redirectingToLogin = true;
+        try {
           const { default: router } = await import("src/router");
           if (router.currentRoute.value.name !== "login") {
-            router.push({ name: "login" });
+            router.replace({ name: "login" });
           }
-          setTimeout(() => (redirectingToLogin = false), 500);
+        } catch (e) {
+          console.error("[AUTH] Error redirigiendo al login:", e);
+        } finally {
+          setTimeout(() => (redirectingToLogin = false), 600);
         }
-      } catch {}
+      }
     }
 
+    // 🧩 Retornar error formateado
     return Promise.reject({
       status,
       data: error?.response?.data,

@@ -498,23 +498,35 @@ async function enviarContraoferta() {
   }
 }
 
-// 🔹 Aceptar oferta
+// 🔹 Aceptar oferta (genera licencia + pago pendiente)
 async function aceptarOferta() {
-  try {
-    const curso = cursoSeleccionado.value;
-    await api.patch(`/profesor/cursos/${curso.idcurso}/aceptar-oferta`);
-    dialogOferta.value = false;
-    $q.notify({
-      type: "positive",
-      message: "Oferta aceptada. El curso ha sido publicado.",
-    });
-    loadCursos();
-  } catch {
-    $q.notify({
-      type: "negative",
-      message: "Error al aceptar la oferta",
-    });
-  }
+  $q.dialog({
+    title: "Confirmar aceptación",
+    message:
+      "¿Deseas aceptar esta oferta? Tu curso será publicado y se generará un pago pendiente.",
+    cancel: true,
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      loading.value = true;
+      const curso = cursoSeleccionado.value;
+      await api.patch(`/profesor/cursos/${curso.idcurso}/aceptar-oferta`);
+      dialogOferta.value = false;
+      $q.notify({
+        type: "positive",
+        message:
+          "✅ Oferta aceptada. Se generó la licencia y tu pago pendiente.",
+      });
+      loadCursos();
+    } catch {
+      $q.notify({
+        type: "negative",
+        message: "❌ Error al aceptar la oferta. Intenta nuevamente.",
+      });
+    } finally {
+      loading.value = false;
+    }
+  });
 }
 
 onMounted(loadCursos);

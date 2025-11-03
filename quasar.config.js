@@ -14,7 +14,7 @@ export default configure(function (/* ctx */) {
     css: ["app.scss"], // o 'app.css' si no usas SCSS
 
     // Boot files (cargan antes que la app)
-    boot: ["axios", "auth"],
+    boot: ["pinia", "axios", "auth", "apexcharts", "plyr-css"],
 
     // Iconos / fuentes extra (opcional)
     extras: [

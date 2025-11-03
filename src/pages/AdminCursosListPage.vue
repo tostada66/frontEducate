@@ -1,16 +1,30 @@
 <template>
   <q-page class="q-pa-lg bg-grey-2">
-    <!-- 🧾 Título -->
-    <div class="text-h5 text-primary text-center q-mb-xl">
-      📚 Catálogo General de Cursos
+    <!-- 🧭 Encabezado -->
+    <div class="text-h5 text-primary text-center q-mb-lg">
+      🧭 Gestión General de Cursos
     </div>
 
-    <q-separator color="primary" inset />
+    <!-- 🔘 Selector de vista -->
+    <div class="row justify-center q-mb-xl">
+      <q-btn-toggle
+        v-model="modoVista"
+        :options="[
+          { label: 'Catálogo', value: 'catalogo', icon: 'grid_view' },
+          { label: 'Tabla', value: 'tabla', icon: 'table_chart' },
+        ]"
+        color="primary"
+        glossy
+        rounded
+        unelevated
+        toggle-color="primary"
+      />
+    </div>
 
-    <!-- 🔍 Barra de filtros -->
-    <div class="filtros-container q-mb-lg row q-col-gutter-md">
-      <!-- Buscar por nombre -->
-      <div class="col-12 col-md-4">
+    <!-- 🔍 Filtros -->
+    <div class="filtros-container q-mb-xl row q-col-gutter-md">
+      <!-- Buscar -->
+      <div class="col-12 col-md-6">
         <div class="q-mb-xs text-grey-7 flex items-center">
           <q-icon name="search" size="16px" class="q-mr-xs" color="primary" />
           <span class="text-caption">Buscar por nombre</span>
@@ -21,7 +35,7 @@
           rounded
           standout="bg-white text-primary"
           dense
-          placeholder="Ej. Algoritmos"
+          placeholder="Ej. Programación"
           clearable
           debounce="300"
         />
@@ -36,7 +50,7 @@
             class="q-mr-xs"
             color="secondary"
           />
-          <span class="text-caption">Categoría</span>
+          <span class="text-caption">Filtrar por categoría</span>
         </div>
         <q-select
           v-model="filtros.categoria"
@@ -58,7 +72,7 @@
       <div class="col-12 col-md-3">
         <div class="q-mb-xs text-grey-7 flex items-center">
           <q-icon name="school" size="16px" class="q-mr-xs" color="primary" />
-          <span class="text-caption">Nivel</span>
+          <span class="text-caption">Filtrar por nivel</span>
         </div>
         <q-select
           v-model="filtros.nivel"
@@ -84,43 +98,18 @@
           </template>
         </q-select>
       </div>
-
-      <!-- Profesor (solo visible para admin) -->
-      <div class="col-12 col-md-2" v-if="auth.isAdmin">
-        <div class="q-mb-xs text-grey-7 flex items-center">
-          <q-icon name="person" size="16px" class="q-mr-xs" color="purple" />
-          <span class="text-caption">Profesor</span>
-        </div>
-        <q-select
-          v-model="filtros.profesor"
-          :options="profesores"
-          option-value="idusuario"
-          option-label="nombre_completo"
-          outlined
-          rounded
-          standout="bg-white text-primary"
-          dense
-          clearable
-          emit-value
-          map-options
-          placeholder="Selecciona profesor"
-        />
-      </div>
     </div>
 
-    <!-- 🧩 Grid de cursos -->
-    <div v-if="loading" class="row justify-center q-mt-lg">
-      <q-spinner-dots color="primary" size="40px" />
-    </div>
-
-    <div v-else class="row q-col-gutter-lg">
+    <!-- ============================
+         🧱 MODO CATÁLOGO
+    ============================ -->
+    <div v-if="modoVista === 'catalogo'" class="row q-col-gutter-lg">
       <div
         v-for="curso in cursosFiltrados"
         :key="curso.idcurso"
         class="col-12 col-md-6 col-lg-4"
       >
         <q-card class="curso-card shadow-4">
-          <!-- Imagen -->
           <div class="curso-img-container">
             <img
               :src="fixUrl(curso)"
@@ -132,7 +121,6 @@
             </div>
           </div>
 
-          <!-- Información -->
           <q-card-section>
             <div class="row items-center justify-between q-mb-sm">
               <div class="row items-center">
@@ -157,48 +145,32 @@
             <div class="q-mb-sm">
               <span class="info-label">Profesor:</span>
               <span class="info-value">
-                {{
-                  curso.profesor?.usuario?.nombres
-                    ? curso.profesor.usuario.nombres +
-                      " " +
-                      curso.profesor.usuario.apellidos
-                    : "No asignado"
-                }}
+                {{ curso.profesor?.usuario?.nombres || "No asignado" }}
               </span>
             </div>
 
             <div class="q-mb-sm">
-              <span class="info-label">Descripción:</span>
-              <span class="info-value">
-                {{ curso.descripcion || "Sin descripción" }}
-              </span>
-            </div>
-
-            <div>
-              <span class="info-label">Duración:</span>
-              <span class="info-value">
-                {{
-                  curso.duracion_total
-                    ? curso.duracion_total + " hrs"
-                    : "No definida"
-                }}
-              </span>
+              <span class="info-label">Estado:</span>
+              <q-badge
+                :color="getEstadoColor(curso.estado)"
+                class="text-caption text-white"
+                :label="curso.estado.toUpperCase()"
+              />
             </div>
           </q-card-section>
 
-          <!-- Acciones -->
           <q-card-actions align="right">
             <q-btn
-              v-if="auth.isStudent"
+              color="secondary"
               flat
-              round
-              color="red"
-              :icon="curso.matriculado ? 'favorite' : 'favorite_border'"
-              @click="toggleMatricula(curso)"
+              icon="school"
+              label="Unidades"
+              @click="goUnidades(curso.idcurso)"
             />
             <q-btn
-              color="primary"
-              glossy
+              color="teal"
+              flat
+              icon="visibility"
               label="Ver curso"
               @click="goCursoDetalle(curso.idcurso)"
             />
@@ -207,12 +179,80 @@
       </div>
     </div>
 
-    <!-- No hay cursos -->
+    <!-- ============================
+         📋 MODO TABLA
+    ============================ -->
+    <div v-else>
+      <q-table
+        :rows="cursosFiltrados"
+        :columns="columns"
+        row-key="idcurso"
+        flat
+        bordered
+        :loading="loading"
+        no-data-label="No hay cursos disponibles"
+        :pagination="{ rowsPerPage: 8 }"
+      >
+        <!-- Imagen -->
+        <template #body-cell-imagen="props">
+          <q-td>
+            <q-avatar square size="45px">
+              <img :src="fixUrl(props.row)" />
+            </q-avatar>
+          </q-td>
+        </template>
+
+        <!-- Estado -->
+        <template #body-cell-estado="props">
+          <q-td>
+            <q-badge
+              :color="getEstadoColor(props.row.estado)"
+              class="text-white text-weight-bold"
+            >
+              {{ props.row.estado }}
+            </q-badge>
+          </q-td>
+        </template>
+
+        <!-- Acciones -->
+        <template #body-cell-acciones="props">
+          <q-td class="text-center q-gutter-xs">
+            <q-btn
+              dense
+              flat
+              round
+              icon="school"
+              color="secondary"
+              @click="goUnidades(props.row.idcurso)"
+            >
+              <q-tooltip>Ver unidades</q-tooltip>
+            </q-btn>
+            <q-btn
+              dense
+              flat
+              round
+              icon="visibility"
+              color="teal"
+              @click="goCursoDetalle(props.row.idcurso)"
+            >
+              <q-tooltip>Ver curso</q-tooltip>
+            </q-btn>
+          </q-td>
+        </template>
+      </q-table>
+    </div>
+
+    <!-- Loader -->
+    <div v-if="loading" class="row justify-center q-mt-lg">
+      <q-spinner-dots color="primary" size="40px" />
+    </div>
+
+    <!-- Sin resultados -->
     <div
       v-if="!loading && cursosFiltrados.length === 0"
       class="text-center text-grey q-mt-lg"
     >
-      No hay cursos disponibles por el momento.
+      No hay cursos disponibles.
     </div>
   </q-page>
 </template>
@@ -220,25 +260,21 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import { api } from "boot/axios";
-import { useRouter, useRoute } from "vue-router";
+import { useRouter } from "vue-router";
 import { useQuasar } from "quasar";
-import { useAuthStore } from "src/stores/auth";
 
 const $q = useQuasar();
 const router = useRouter();
-const route = useRoute();
-const auth = useAuthStore();
 
 const cursos = ref([]);
 const categorias = ref([]);
-const profesores = ref([]);
 const loading = ref(false);
+const modoVista = ref("catalogo");
 
 const filtros = ref({
   busqueda: "",
   categoria: null,
   nivel: null,
-  profesor: null,
 });
 
 const nivelesConIcono = [
@@ -247,14 +283,32 @@ const nivelesConIcono = [
   { label: "Avanzado", value: "Avanzado", icon: "workspace_premium" },
 ];
 
-// 🧠 Cargar todos los cursos
+const columns = [
+  { name: "imagen", label: "Imagen", align: "center" },
+  { name: "nombre", label: "Nombre", field: "nombre", align: "left" },
+  {
+    name: "categoria",
+    label: "Categoría",
+    field: (row) => row.categoria?.nombre || "Sin categoría",
+    align: "left",
+  },
+  { name: "nivel", label: "Nivel", field: "nivel", align: "left" },
+  {
+    name: "profesor",
+    label: "Profesor",
+    field: (row) => row.profesor?.usuario?.nombres || "No asignado",
+    align: "left",
+  },
+  { name: "estado", label: "Estado", field: "estado", align: "center" },
+  { name: "acciones", label: "Acciones", align: "center" },
+];
+
 async function loadCursos() {
   loading.value = true;
   try {
-    const { data } = await api.get("/catalogo/cursos");
+    const { data } = await api.get("/cursos"); // 👈 Todos los cursos
     cursos.value = Array.isArray(data.data) ? data.data : data;
 
-    // categorías únicas
     categorias.value = [
       ...new Map(
         cursos.value
@@ -262,38 +316,6 @@ async function loadCursos() {
           .map((c) => [c.categoria.idcategoria, c.categoria])
       ).values(),
     ];
-
-    // profesores únicos
-    profesores.value = [
-      ...new Map(
-        cursos.value
-          .filter((c) => c.profesor)
-          .map((c) => [
-            c.profesor.idusuario,
-            {
-              idusuario: c.profesor.idusuario,
-              nombre_completo:
-                c.profesor.nombre_completo ||
-                c.profesor.nombre ||
-                `Profesor #${c.profesor.idprofesor}`,
-            },
-          ])
-      ).values(),
-    ];
-
-    // Si viene desde el listado de profesores, aplicar filtro inicial
-    if (route.params.idusuario) {
-      filtros.value.profesor = parseInt(route.params.idusuario);
-    }
-
-    // Si es estudiante, cargar sus cursos matriculados
-    if (auth.isStudent) {
-      const { data: inscritos } = await api.get("/mis-cursos");
-      const idsInscritos = inscritos.map((m) => m.idcurso);
-      cursos.value.forEach((c) => {
-        c.matriculado = idsInscritos.includes(c.idcurso);
-      });
-    }
   } catch (err) {
     console.error("❌ Error cargando cursos:", err);
     $q.notify({ type: "negative", message: "Error cargando cursos" });
@@ -302,32 +324,22 @@ async function loadCursos() {
   }
 }
 
-async function toggleMatricula(curso) {
-  if (!auth.isStudent) {
-    $q.notify({
-      type: "warning",
-      message: "Debes iniciar sesión como estudiante",
-    });
-    return;
-  }
-  try {
-    if (!curso.matriculado) {
-      await api.post(`/cursos/${curso.idcurso}/inscribir`);
-      curso.matriculado = true;
-      $q.notify({ type: "positive", message: "Curso añadido a Mis cursos ❤️" });
-    } else {
-      await api.post(`/cursos/${curso.idcurso}/desuscribir`);
-      curso.matriculado = false;
-      $q.notify({ type: "warning", message: "Curso eliminado de Mis cursos" });
-    }
-  } catch (err) {
-    console.error("❌ Error en matrícula:", err);
-    $q.notify({ type: "negative", message: "No se pudo actualizar matrícula" });
-  }
+function getEstadoColor(estado) {
+  const map = {
+    publicado: "green-6",
+    en_revision: "amber-6",
+    rechazado: "red-6",
+    borrador: "grey-6",
+  };
+  return map[estado] || "blue-6";
 }
 
 function goCursoDetalle(idcurso) {
   router.push({ name: "curso-detalle", params: { idcurso } });
+}
+
+function goUnidades(idcurso) {
+  router.push({ name: "admin-unidades", params: { idcurso } });
 }
 
 function fixUrl(curso) {
@@ -336,27 +348,20 @@ function fixUrl(curso) {
   return "/images/curso-placeholder.png";
 }
 
-const cursosFiltrados = computed(() => {
-  return cursos.value.filter((curso) => {
+const cursosFiltrados = computed(() =>
+  cursos.value.filter((curso) => {
     const nombre = curso.nombre?.toLowerCase() || "";
     const busqueda = filtros.value.busqueda?.toLowerCase() || "";
-
     const matchBusqueda = !busqueda || nombre.includes(busqueda);
     const matchCategoria =
       !filtros.value.categoria || curso.idcategoria === filtros.value.categoria;
     const matchNivel =
       !filtros.value.nivel || curso.nivel === filtros.value.nivel;
-    const matchProfesor =
-      !filtros.value.profesor ||
-      curso.profesor?.idusuario === filtros.value.profesor;
+    return matchBusqueda && matchCategoria && matchNivel;
+  })
+);
 
-    return matchBusqueda && matchCategoria && matchNivel && matchProfesor;
-  });
-});
-
-onMounted(() => {
-  loadCursos();
-});
+onMounted(() => loadCursos());
 </script>
 
 <style scoped>
@@ -376,6 +381,7 @@ onMounted(() => {
   transform: translateY(-6px);
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.15);
 }
+
 .curso-img-container {
   position: relative;
   width: 100%;

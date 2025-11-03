@@ -1,11 +1,19 @@
 <template>
-  <q-page class="q-pa-lg bg-grey-1">
-    <!-- Título -->
-    <div class="text-h5 text-primary text-center q-mb-xl">❤️ Mis Cursos</div>
+  <q-page class="q-pa-lg bg-grey-2">
+    <!-- 🧾 Título -->
+    <div class="text-h5 text-primary text-center q-mb-xl">
+      ❤️ Mis Cursos Inscritos
+    </div>
+
     <q-separator color="primary" inset />
 
-    <!-- Grid de cursos -->
-    <div v-if="cursos.length" class="row q-col-gutter-lg q-mt-lg">
+    <!-- Loader -->
+    <div v-if="loading" class="row justify-center q-mt-lg">
+      <q-spinner-dots color="primary" size="40px" />
+    </div>
+
+    <!-- 📚 Grid de cursos -->
+    <div v-else-if="cursos.length" class="row q-col-gutter-lg q-mt-lg">
       <div
         v-for="curso in cursos"
         :key="curso.idcurso"
@@ -13,23 +21,66 @@
       >
         <q-card class="curso-card shadow-4">
           <!-- Imagen -->
-          <q-img
-            :src="fixUrl(curso)"
-            :alt="curso.nombre"
-            height="180px"
-            class="curso-img"
-          />
+          <div class="curso-img-container">
+            <img
+              :src="fixUrl(curso)"
+              alt="Imagen del curso"
+              class="curso-img"
+            />
+            <div class="curso-overlay">
+              <div class="curso-titulo">{{ curso.nombre }}</div>
+            </div>
+          </div>
 
-          <!-- Info -->
+          <!-- Información -->
           <q-card-section>
-            <div class="text-subtitle1 text-bold q-mb-xs">
-              {{ curso.nombre }}
-            </div>
-            <div class="text-caption text-grey q-mb-sm">
-              {{ curso.categoria?.nombre || "Sin categoría" }}
+            <div class="row items-center justify-between q-mb-sm">
+              <div class="row items-center">
+                <span class="info-label q-mr-sm">Categoría:</span>
+                <q-badge
+                  color="secondary"
+                  class="text-caption"
+                  :label="curso.categoria?.nombre || 'Sin categoría'"
+                />
+              </div>
+              <div class="row items-center">
+                <span class="info-label q-mr-sm">Nivel:</span>
+                <q-badge
+                  color="primary"
+                  outline
+                  class="text-caption"
+                  :label="curso.nivel || 'General'"
+                />
+              </div>
             </div>
 
-            <!-- Progreso -->
+            <!-- 👨‍🏫 Profesor -->
+            <div class="q-mb-sm">
+              <span class="info-label">Profesor:</span>
+              <span class="info-value">
+                {{ curso.profesor?.nombre_completo || "No asignado" }}
+              </span>
+            </div>
+
+            <div class="q-mb-sm">
+              <span class="info-label">Descripción:</span>
+              <span class="info-value">
+                {{ curso.descripcion || "Sin descripción" }}
+              </span>
+            </div>
+
+            <div class="q-mb-sm">
+              <span class="info-label">Duración:</span>
+              <span class="info-value">
+                {{
+                  curso.duracion_total
+                    ? curso.duracion_total + " hrs"
+                    : "No definida"
+                }}
+              </span>
+            </div>
+
+            <!-- 🔹 Progreso -->
             <div class="q-mt-sm">
               <div class="text-caption text-grey-8 q-mb-xs">
                 Avance del curso
@@ -47,12 +98,19 @@
             </div>
           </q-card-section>
 
-          <!-- Footer -->
+          <!-- Acciones -->
           <q-card-actions align="right">
+            <q-btn
+              flat
+              round
+              color="red"
+              icon="favorite"
+              @click="desuscribirCurso(curso)"
+            />
             <q-btn
               color="primary"
               glossy
-              label="Ir al curso"
+              label="Ver curso"
               @click="goCursoDetalle(curso.idcurso)"
             />
           </q-card-actions>
@@ -60,16 +118,8 @@
       </div>
     </div>
 
-    <!-- Loader -->
-    <div class="row justify-center q-mt-lg" v-if="loading">
-      <q-spinner-dots color="primary" size="40px" />
-    </div>
-
     <!-- Mensaje vacío -->
-    <div
-      v-if="!loading && cursos.length === 0"
-      class="text-center text-grey q-mt-xl"
-    >
+    <div v-else class="text-center text-grey q-mt-xl">
       Aún no te has inscrito en ningún curso.
       <div class="q-mt-sm">
         <q-btn color="primary" label="Explorar cursos" @click="goCatalogo" />
@@ -90,6 +140,7 @@ const router = useRouter();
 const cursos = ref([]);
 const loading = ref(false);
 
+// 🧠 Cargar mis cursos con info detallada
 async function loadMisCursos() {
   loading.value = true;
   try {
@@ -103,18 +154,31 @@ async function loadMisCursos() {
   }
 }
 
+// ➡️ Navegar al detalle del curso
 function goCursoDetalle(idcurso) {
   router.push({ name: "curso-detalle", params: { idcurso } });
 }
 
+// ➡️ Ir al catálogo general
 function goCatalogo() {
   router.push({ name: "catalogo-cursos" });
 }
 
+// 💔 Desuscribir curso
+async function desuscribirCurso(curso) {
+  try {
+    await api.post(`/cursos/${curso.idcurso}/desuscribir`);
+    cursos.value = cursos.value.filter((c) => c.idcurso !== curso.idcurso);
+    $q.notify({ type: "warning", message: "Curso eliminado de Mis Cursos" });
+  } catch (err) {
+    console.error("❌ Error al desuscribir:", err);
+    $q.notify({ type: "negative", message: "No se pudo eliminar el curso" });
+  }
+}
+
+// 🖼️ Fix URL imagen
 function fixUrl(curso) {
-  if (curso.curso?.imagen_url) return curso.curso.imagen_url;
-  if (curso.curso?.imagen)
-    return `http://127.0.0.1:8000/storage/${curso.curso.imagen}`;
+  if (curso.imagen_url) return curso.imagen_url;
   if (curso.imagen) return `http://127.0.0.1:8000/storage/${curso.imagen}`;
   return "/images/curso-placeholder.png";
 }
@@ -126,7 +190,7 @@ onMounted(() => {
 
 <style scoped>
 .curso-card {
-  border-radius: 14px;
+  border-radius: 16px;
   overflow: hidden;
   transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -134,7 +198,39 @@ onMounted(() => {
   transform: translateY(-6px);
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.15);
 }
+.curso-img-container {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+}
 .curso-img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.curso-card:hover .curso-img {
+  transform: scale(1.1);
+}
+.curso-overlay {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  padding: 8px 12px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.65), transparent);
+}
+.curso-titulo {
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.info-label {
+  font-weight: 600;
+  color: #37474f;
+  margin-right: 4px;
+}
+.info-value {
+  color: #455a64;
 }
 </style>
