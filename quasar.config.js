@@ -11,7 +11,7 @@ export default configure(function (/* ctx */) {
     supportTS: false,
 
     // Archivos CSS globales
-    css: ["app.scss"], // o 'app.css' si no usas SCSS
+    css: ["app.scss", "plyr-global.css"], // o 'app.css' si no usas SCSS
 
     // Boot files (cargan antes que la app)
     boot: ["pinia", "axios", "auth", "apexcharts", "plyr-css"],

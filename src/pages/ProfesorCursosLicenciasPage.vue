@@ -1,9 +1,7 @@
 <template>
   <q-page class="q-pa-md bg-grey-2">
     <!-- 🧑‍🏫 Encabezado -->
-    <div class="text-h5 text-primary text-weight-bold q-mb-md">
-      Mis Cursos y Estado de Licencia
-    </div>
+    <div class="titulo-licencia q-mb-md">Mis Cursos y Estado de Licencia</div>
 
     <!-- 🔘 Filtros -->
     <div class="row justify-center q-mb-lg">
@@ -53,7 +51,7 @@
               <transition name="fade">
                 <q-badge
                   :color="getColorEstado(curso.estado)"
-                  class="text-white text-bold"
+                  class="estado-badge text-white text-bold"
                 >
                   {{ getLabelEstado(curso.estado) }}
                 </q-badge>
@@ -63,12 +61,60 @@
 
           <!-- Info -->
           <q-card-section>
-            <div class="text-h6 text-primary">{{ curso.nombre }}</div>
-            <div class="text-caption text-grey-7 q-mb-xs">
-              {{ curso.categoria?.nombre || "Sin categoría" }}
+            <!-- Título del curso -->
+            <div class="curso-titulo-card q-mb-xs">
+              <q-icon
+                name="menu_book"
+                size="20px"
+                class="q-mr-sm text-primary"
+              />
+              <span>Curso: {{ curso.nombre }}</span>
             </div>
-            <div class="text-caption text-grey-8 q-mb-xs">
-              Clases: {{ curso.num_clases || 0 }}
+
+            <!-- Categoría -->
+            <div class="detalle-linea">
+              <q-icon
+                name="category"
+                size="18px"
+                class="q-mr-xs text-primary"
+              />
+              <span class="detalle-label">Categoría:</span>
+              <span class="detalle-value">
+                {{ curso.categoria?.nombre || "Sin categoría" }}
+              </span>
+            </div>
+
+            <!-- Clases -->
+            <div class="detalle-linea">
+              <q-icon
+                name="play_lesson"
+                size="18px"
+                class="q-mr-xs text-primary"
+              />
+              <span class="detalle-label">Clases:</span>
+              <span class="detalle-value">
+                {{ curso.num_clases || 0 }}
+              </span>
+            </div>
+
+            <!-- Duración (si existe) -->
+            <div
+              class="detalle-linea"
+              v-if="curso.duracion_total || curso.duracion_estimada"
+            >
+              <q-icon
+                name="schedule"
+                size="18px"
+                class="q-mr-xs text-primary"
+              />
+              <span class="detalle-label">Duración:</span>
+              <span class="detalle-value">
+                {{
+                  curso.duracion_total
+                    ? formatearDuracion(curso.duracion_total)
+                    : formatearDuracion((curso.duracion_estimada || 0) * 60)
+                }}
+              </span>
             </div>
           </q-card-section>
 
@@ -414,6 +460,23 @@ function formatDate(dateStr) {
   });
 }
 
+// ⏱ Formatear duración (segundos → h:mm:ss / m:ss / Xs)
+function formatearDuracion(segundos) {
+  if (!segundos || segundos <= 0) return "0s";
+
+  const h = Math.floor(segundos / 3600);
+  const m = Math.floor((segundos % 3600) / 60);
+  const s = segundos % 60;
+
+  if (h > 0) {
+    return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
+  if (m > 0) {
+    return `${m}:${String(s).padStart(2, "0")}`;
+  }
+  return `${s}s`;
+}
+
 // 🧭 Acciones
 function verCurso(curso) {
   router.push({
@@ -533,6 +596,14 @@ onMounted(loadCursos);
 </script>
 
 <style scoped>
+.titulo-licencia {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1565c0;
+  text-align: center;
+}
+
+/* Imagen de curso */
 .curso-img-container {
   position: relative;
   width: 100%;
@@ -550,6 +621,12 @@ onMounted(loadCursos);
   top: 10px;
   left: 10px;
 }
+.estado-badge {
+  font-size: 0.8rem;
+  padding: 4px 8px;
+}
+
+/* Card hover */
 .hover-card {
   transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -557,9 +634,42 @@ onMounted(loadCursos);
   transform: translateY(-6px);
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
 }
+
+/* Info del curso */
+.curso-titulo-card {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1a237e;
+  display: flex;
+  align-items: center;
+}
+.curso-titulo-card span {
+  line-height: 1.2;
+}
+
+/* Detalles */
+.detalle-linea {
+  display: flex;
+  align-items: center;
+  margin-top: 4px;
+}
+.detalle-label {
+  font-weight: 600;
+  font-size: 0.98rem;
+  color: #37474f;
+  margin-right: 4px;
+}
+.detalle-value {
+  font-size: 0.98rem;
+  color: #455a64;
+}
+
+/* Observaciones */
 .rounded-borders {
   border-radius: 12px;
 }
+
+/* Fade badge */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s;

@@ -1,5 +1,5 @@
 // src/boot/plyr-css.js
-import "plyr/dist/plyr.css"; // solo importa el CSS
+import "plyr/dist/plyr.css";
 
 export default () => {
   /* no-op */

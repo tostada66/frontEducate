@@ -1,7 +1,7 @@
 <template>
   <q-page class="q-pa-md bg-grey-2">
     <!-- 🔹 Encabezado -->
-    <div class="text-h5 text-primary text-weight-bold q-mb-md">
+    <div class="titulo-gestion q-mb-md">
       Gestión de Cursos Pendientes, Ofertas y Rechazados
     </div>
 
@@ -74,12 +74,36 @@
 
           <!-- Info -->
           <q-card-section>
-            <div class="text-h6 text-primary">{{ curso.nombre }}</div>
-            <div class="text-caption text-grey-7 q-mb-xs">
-              {{ curso.categoria?.nombre || "Sin categoría" }}
+            <!-- Título del curso -->
+            <div class="curso-titulo-card q-mb-xs">
+              <q-icon
+                name="menu_book"
+                size="20px"
+                class="q-mr-sm text-primary"
+              />
+              <span>Curso: {{ curso.nombre }}</span>
             </div>
-            <div class="text-caption text-grey">
-              Profesor: {{ curso.profesor?.usuario?.nombres || "Desconocido" }}
+
+            <!-- Categoría -->
+            <div class="detalle-linea">
+              <q-icon
+                name="category"
+                size="18px"
+                class="q-mr-xs text-primary"
+              />
+              <span class="detalle-label">Categoría:</span>
+              <span class="detalle-value">
+                {{ curso.categoria?.nombre || "Sin categoría" }}
+              </span>
+            </div>
+
+            <!-- Profesor -->
+            <div class="detalle-linea">
+              <q-icon name="person" size="18px" class="q-mr-xs text-primary" />
+              <span class="detalle-label">Profesor:</span>
+              <span class="detalle-value">
+                {{ curso.profesor?.usuario?.nombres || "Desconocido" }}
+              </span>
             </div>
           </q-card-section>
 
@@ -534,6 +558,14 @@ onMounted(loadCursos);
 </script>
 
 <style scoped>
+.titulo-gestion {
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: #1565c0;
+  text-align: center;
+}
+
+/* Imagen y card */
 .curso-img-container {
   position: relative;
   width: 100%;
@@ -557,5 +589,34 @@ onMounted(loadCursos);
 .hover-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
+}
+
+/* Título dentro de la tarjeta */
+.curso-titulo-card {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1a237e;
+  display: flex;
+  align-items: center;
+}
+.curso-titulo-card span {
+  line-height: 1.2;
+}
+
+/* Detalles */
+.detalle-linea {
+  display: flex;
+  align-items: center;
+  margin-top: 4px;
+}
+.detalle-label {
+  font-weight: 600;
+  font-size: 0.98rem;
+  color: #37474f;
+  margin-right: 4px;
+}
+.detalle-value {
+  font-size: 0.98rem;
+  color: #455a64;
 }
 </style>

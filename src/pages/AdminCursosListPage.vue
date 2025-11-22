@@ -1,9 +1,7 @@
 <template>
   <q-page class="q-pa-lg bg-grey-2">
     <!-- 🧭 Encabezado -->
-    <div class="text-h5 text-primary text-center q-mb-lg">
-      🧭 Gestión General de Cursos
-    </div>
+    <div class="titulo-gestion q-mb-lg">🧭 Gestión General de Cursos</div>
 
     <!-- 🔘 Selector de vista -->
     <div class="row justify-center q-mb-xl">
@@ -117,43 +115,70 @@
               class="curso-img"
             />
             <div class="curso-overlay">
-              <div class="curso-titulo">{{ curso.nombre }}</div>
+              <div class="curso-titulo">Curso: {{ curso.nombre }}</div>
             </div>
           </div>
 
           <q-card-section>
-            <div class="row items-center justify-between q-mb-sm">
-              <div class="row items-center">
-                <span class="info-label q-mr-sm">Categoría:</span>
-                <q-badge
-                  color="secondary"
-                  class="text-caption"
-                  :label="curso.categoria?.nombre || 'Sin categoría'"
-                />
-              </div>
-              <div class="row items-center">
-                <span class="info-label q-mr-sm">Nivel:</span>
-                <q-badge
-                  color="primary"
-                  outline
-                  class="text-caption"
-                  :label="curso.nivel || 'General'"
-                />
-              </div>
+            <!-- Categoría -->
+            <div class="detalle-linea">
+              <q-icon
+                name="category"
+                size="18px"
+                class="q-mr-xs text-primary"
+              />
+              <span class="detalle-label">Categoría:</span>
+              <q-badge
+                color="secondary"
+                class="q-ml-xs text-caption"
+                :label="curso.categoria?.nombre || 'Sin categoría'"
+              />
             </div>
 
-            <div class="q-mb-sm">
-              <span class="info-label">Profesor:</span>
-              <span class="info-value">
+            <!-- Nivel -->
+            <div class="detalle-linea">
+              <q-icon name="school" size="18px" class="q-mr-xs text-primary" />
+              <span class="detalle-label">Nivel:</span>
+              <span class="detalle-value">
+                {{ curso.nivel || "General" }}
+              </span>
+            </div>
+
+            <!-- Profesor -->
+            <div class="detalle-linea">
+              <q-icon name="person" size="18px" class="q-mr-xs text-primary" />
+              <span class="detalle-label">Profesor:</span>
+              <span class="detalle-value">
                 {{ curso.profesor?.usuario?.nombres || "No asignado" }}
               </span>
             </div>
 
-            <div class="q-mb-sm">
-              <span class="info-label">Estado:</span>
+            <!-- Duración -->
+            <div class="detalle-linea">
+              <q-icon
+                name="schedule"
+                size="18px"
+                class="q-mr-xs text-primary"
+              />
+              <span class="detalle-label">Duración:</span>
+              <span class="detalle-value">
+                {{
+                  curso.duracion_total
+                    ? formatearDuracion(curso.duracion_total)
+                    : curso.duracion_estimada
+                    ? formatearDuracion(curso.duracion_estimada * 60)
+                    : "No definida"
+                }}
+              </span>
+            </div>
+
+            <!-- Estado -->
+            <div class="detalle-linea">
+              <q-icon name="sell" size="18px" class="q-mr-xs text-primary" />
+              <span class="detalle-label">Estado:</span>
               <q-badge
                 :color="getEstadoColor(curso.estado)"
-                class="text-caption text-white"
+                class="text-caption text-white q-ml-xs"
                 :label="curso.estado.toUpperCase()"
               />
             </div>
@@ -192,6 +217,7 @@
         :loading="loading"
         no-data-label="No hay cursos disponibles"
         :pagination="{ rowsPerPage: 8 }"
+        class="tabla-cursos"
       >
         <!-- Imagen -->
         <template #body-cell-imagen="props">
@@ -199,6 +225,19 @@
             <q-avatar square size="45px">
               <img :src="fixUrl(props.row)" />
             </q-avatar>
+          </q-td>
+        </template>
+
+        <!-- Duración formateada -->
+        <template #body-cell-duracion="props">
+          <q-td>
+            {{
+              props.row.duracion_total
+                ? formatearDuracion(props.row.duracion_total)
+                : props.row.duracion_estimada
+                ? formatearDuracion(props.row.duracion_estimada * 60)
+                : "0s"
+            }}
           </q-td>
         </template>
 
@@ -299,6 +338,12 @@ const columns = [
     field: (row) => row.profesor?.usuario?.nombres || "No asignado",
     align: "left",
   },
+  {
+    name: "duracion",
+    label: "Duración",
+    field: (row) => row.duracion_total || row.duracion_estimada || 0,
+    align: "left",
+  },
   { name: "estado", label: "Estado", field: "estado", align: "center" },
   { name: "acciones", label: "Acciones", align: "center" },
 ];
@@ -361,10 +406,36 @@ const cursosFiltrados = computed(() =>
   })
 );
 
+/* ⏱ Formatear duración (segundos → h:mm:ss / m:ss / Xs) */
+function formatearDuracion(segundos) {
+  if (!segundos || segundos <= 0) return "0s";
+
+  const h = Math.floor(segundos / 3600);
+  const m = Math.floor((segundos % 3600) / 60);
+  const s = segundos % 60;
+
+  if (h > 0) {
+    return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
+  if (m > 0) {
+    return `${m}:${String(s).padStart(2, "0")}`;
+  }
+  return `${s}s`;
+}
+
 onMounted(() => loadCursos());
 </script>
 
 <style scoped>
+/* Título principal */
+.titulo-gestion {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1565c0;
+  text-align: center;
+}
+
+/* Filtros */
 .filtros-container {
   background: #ffffff;
   padding: 16px;
@@ -372,6 +443,13 @@ onMounted(() => loadCursos());
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
 
+/* Tabla */
+.tabla-cursos {
+  background: #ffffff;
+  border-radius: 16px;
+}
+
+/* Cards de curso */
 .curso-card {
   border-radius: 16px;
   overflow: hidden;
@@ -406,15 +484,24 @@ onMounted(() => loadCursos());
 }
 .curso-titulo {
   color: #fff;
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.3rem;
+  font-weight: 700;
 }
-.info-label {
+
+/* Detalles en la card */
+.detalle-linea {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.detalle-label {
   font-weight: 600;
+  font-size: 0.98rem;
   color: #37474f;
   margin-right: 4px;
 }
-.info-value {
+.detalle-value {
   color: #455a64;
+  font-size: 0.98rem;
 }
 </style>

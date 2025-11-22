@@ -15,7 +15,11 @@
       />
       <div class="curso-hero-overlay">
         <div class="curso-titulo-container">
-          <h2 class="curso-titulo">{{ curso?.nombre }}</h2>
+          <h2 class="curso-titulo">
+            <span class="curso-label">Curso:</span>
+            <span class="curso-nombre">{{ curso?.nombre }}</span>
+          </h2>
+
           <div v-if="curso?.promedio_resenas" class="curso-rating">
             <q-rating
               v-model="curso.promedio_resenas"
@@ -34,26 +38,53 @@
       </div>
     </div>
 
-    <!-- 📋 Información -->
+    <!-- 📋 Información del curso -->
     <div v-if="curso" class="curso-info-panel q-pa-lg">
+      <!-- 🧱 Fila 1 (Categoría, Nivel, Duración total) -->
       <div class="row q-col-gutter-md q-mb-md">
-        <div class="col-12 col-md-4">
-          <span class="info-label">Categoría:</span>
-          <span class="info-value">
-            {{ curso.categoria?.nombre || "Sin categoría" }}
-          </span>
+        <!-- Categoría -->
+        <div class="col-12 col-md-4 q-mb-sm info-item">
+          <q-icon name="category" class="info-icon text-indigo-7" />
+          <div>
+            <div class="info-label">Categoría</div>
+            <div class="info-value">
+              {{ curso.categoria?.nombre || "Sin categoría" }}
+            </div>
+          </div>
         </div>
-        <div class="col-12 col-md-4">
-          <span class="info-label">Nivel:</span>
-          <span class="info-value">{{ curso.nivel || "General" }}</span>
+
+        <!-- Nivel -->
+        <div class="col-12 col-md-4 q-mb-sm info-item">
+          <q-icon name="school" class="info-icon text-teal-7" />
+          <div>
+            <div class="info-label">Nivel</div>
+            <div class="info-value">
+              {{ curso.nivel || "General" }}
+            </div>
+          </div>
+        </div>
+
+        <!-- ⏱️ Duración total -->
+        <div class="col-12 col-md-4 q-mb-sm info-item">
+          <q-icon name="schedule" class="info-icon text-primary" />
+          <div>
+            <div class="info-label">Duración total</div>
+            <div class="info-value">
+              {{ formatearDuracion(curso.duracion_total) }}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="q-mb-md">
-        <span class="info-label">Descripción:</span>
-        <span class="info-value">
-          {{ curso.descripcion || "Sin descripción" }}
-        </span>
+      <!-- 📝 Descripción -->
+      <div class="q-mb-md info-item descripcion-item">
+        <q-icon name="description" class="info-icon text-blue-7" />
+        <div>
+          <div class="info-label">Descripción</div>
+          <div class="info-value">
+            {{ curso.descripcion || "Sin descripción" }}
+          </div>
+        </div>
       </div>
 
       <!-- 🔘 Botones -->
@@ -115,6 +146,7 @@
           class="col-12 col-md-6 col-lg-4"
         >
           <q-card class="unidad-card shadow-3">
+            <!-- IMG -->
             <div class="unidad-img-container">
               <img
                 :src="fixUrl(unidad)"
@@ -126,30 +158,30 @@
               </div>
             </div>
 
+            <!-- INFO CARD -->
             <q-card-section class="scroll-content">
               <div class="q-mb-sm">
                 <span class="info-label">Curso:</span>
                 <span class="info-value">{{ curso?.nombre }}</span>
               </div>
+
               <div class="q-mb-sm">
                 <span class="info-label">Unidad:</span>
                 <span class="info-value">{{ unidad.titulo }}</span>
               </div>
+
               <div class="q-mb-sm">
                 <span class="info-label">Descripción:</span>
-                <span class="info-value">{{
-                  unidad.descripcion || "Sin descripción"
-                }}</span>
+                <span class="info-value">
+                  {{ unidad.descripcion || "Sin descripción" }}
+                </span>
               </div>
 
-              <div class="row items-center text-caption text-grey-7">
-                <q-icon name="schedule" size="16px" class="q-mr-xs" />
-                <span>
-                  {{
-                    unidad.duracion_total
-                      ? unidad.duracion_total + " hrs"
-                      : "Duración no definida"
-                  }}
+              <!-- ⏱ Duración -->
+              <div class="q-mb-sm">
+                <span class="info-label">Duración:</span>
+                <span class="info-value">
+                  {{ formatearDuracion(unidad.duracion_total) }}
                 </span>
               </div>
             </q-card-section>
@@ -259,6 +291,25 @@ const tabs = [
 const isProfesor = computed(() => auth.isProfessor);
 const isAdmin = computed(() => auth.isAdmin);
 
+// 🎯 FORMATEADOR DE TIEMPO
+function formatearDuracion(segundos) {
+  if (!segundos || segundos === 0) return "0s";
+
+  const h = Math.floor(segundos / 3600);
+  const m = Math.floor((segundos % 3600) / 60);
+  const s = segundos % 60;
+
+  if (h > 0) {
+    return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
+
+  if (m > 0) {
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
+
+  return `${s}s`;
+}
+
 // 📦 Cargar curso
 async function loadCurso() {
   loading.value = true;
@@ -288,10 +339,11 @@ function fixUrl(unidad) {
   if (unidad.imagen) return `http://127.0.0.1:8000/storage/${unidad.imagen}`;
   return "/images/unidad-placeholder.png";
 }
-function fixUrlCurso(curso) {
-  if (!curso) return "/images/curso-placeholder.png";
-  if (curso.imagen_url) return curso.imagen_url;
-  if (curso.imagen) return `http://127.0.0.1:8000/storage/${curso.imagen}`;
+function fixUrlCurso(cursoObj) {
+  if (!cursoObj) return "/images/curso-placeholder.png";
+  if (cursoObj.imagen_url) return cursoObj.imagen_url;
+  if (cursoObj.imagen)
+    return `http://127.0.0.1:8000/storage/${cursoObj.imagen}`;
   return "/images/curso-placeholder.png";
 }
 
@@ -373,19 +425,33 @@ onMounted(() => loadCurso());
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: 20px;
+  padding: 20px 24px;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
 }
+
+/* 🔹 Título Curso */
 .curso-titulo {
-  font-size: 1.8rem;
-  font-weight: 700;
-  margin-bottom: 4px;
+  font-size: 2.4rem;
+  font-weight: 800;
+  margin: 0 0 4px 0;
+  color: #ffffff;
 }
+.curso-label {
+  opacity: 0.9;
+  margin-right: 6px;
+}
+.curso-nombre {
+  font-weight: 900;
+}
+
+/* Panel info */
 .curso-info-panel {
   background: #fff;
   border-top: 1px solid #ddd;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
+
+/* Botones */
 .boton-accion {
   border-radius: 8px;
   font-weight: 600;
@@ -397,14 +463,34 @@ onMounted(() => loadCurso());
   opacity: 0.9;
   transform: translateY(-1px);
 }
+
+/* Info items */
+.info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.info-icon {
+  font-size: 26px;
+  margin-top: 2px;
+}
 .info-label {
   font-weight: 600;
   color: #37474f;
-  margin-right: 6px;
+  margin-bottom: 2px;
+  font-size: 1rem;
 }
 .info-value {
   color: #455a64;
+  font-size: 1.3rem;
 }
+
+/* Descripción alineada con el resto */
+.descripcion-item {
+  margin-top: 4px;
+}
+
+/* Cards de unidades */
 .unidad-card {
   border-radius: 14px;
   overflow: hidden;
@@ -440,5 +526,15 @@ onMounted(() => loadCurso());
   color: #fff;
   font-size: 1.05rem;
   font-weight: 600;
+}
+
+/* Responsive pequeño */
+@media (max-width: 768px) {
+  .curso-titulo {
+    font-size: 2rem;
+  }
+  .info-value {
+    font-size: 1.15rem;
+  }
 }
 </style>

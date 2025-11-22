@@ -165,7 +165,6 @@ async function guardarNivel() {
   }
 }
 </script>
-
 <style lang="scss" scoped>
 // Variables de colores
 $primary: #b83a2d;
@@ -187,10 +186,13 @@ $info: #3498db;
   position: relative;
   overflow: hidden;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  padding: 2rem 0;
+  padding: 0.7rem 0; // antes 1rem → todavía más bajo
 }
 
-// Fondo con partículas de código más dinámicas
+/* =======================
+   Fondo con partículas de código
+   ======================= */
+
 .code-bg {
   position: fixed;
   top: 0;
@@ -285,7 +287,10 @@ $info: #3498db;
   }
 }
 
-// Ondas dinámicas de energía
+/* =======================
+   Ondas dinámicas de energía
+   ======================= */
+
 .energy-waves {
   position: fixed;
   top: 0;
@@ -344,7 +349,10 @@ $info: #3498db;
   }
 }
 
-// Círculos pulsantes
+/* =======================
+   Círculos pulsantes
+   ======================= */
+
 .pulse-circles {
   position: fixed;
   top: 0;
@@ -404,7 +412,10 @@ $info: #3498db;
   }
 }
 
-// Partículas flotantes de datos
+/* =======================
+   Partículas flotantes de datos
+   ======================= */
+
 .data-particles {
   position: fixed;
   top: 0;
@@ -472,16 +483,19 @@ $info: #3498db;
   }
 }
 
-// Contenedor principal
+/* =======================
+   Contenedor principal
+   ======================= */
+
 .level-container {
   background: rgba(25, 25, 59, 0.3);
   backdrop-filter: blur(25px);
   border-radius: 24px;
-  padding: 3rem;
+  padding: 1.3rem 1.8rem 1.5rem; // menos padding
   width: 100%;
-  max-width: 1000px;
+  max-width: 920px; // ligeramente más angosto
   border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 26px 52px rgba(0, 0, 0, 0.3);
   animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   position: relative;
   z-index: 2;
@@ -498,22 +512,25 @@ $info: #3498db;
   }
 }
 
-// Header
+/* =======================
+   Header (más compacto)
+   ======================= */
+
 .level-header {
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: 0.9rem; // antes 1.1rem
 }
 
 .level-icon {
-  width: 80px;
-  height: 80px;
+  width: 54px;
+  height: 54px;
   background: linear-gradient(135deg, $primary, $accent);
   border-radius: 50%;
-  margin: 0 auto 1.5rem;
+  margin: 0 auto 0.35rem; // pegado al título
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: 1.6rem;
   animation: iconPulse 3s ease-in-out infinite;
 }
 
@@ -523,16 +540,16 @@ $info: #3498db;
     transform: scale(1);
   }
   50% {
-    transform: scale(1.05);
-    box-shadow: 0 0 30px rgba(255, 107, 107, 0.4);
+    transform: scale(1.04);
+    box-shadow: 0 0 26px rgba(255, 107, 107, 0.4);
   }
 }
 
 .level-title {
   color: $secondary;
-  font-size: 2rem;
+  font-size: 1.6rem; // antes 1.75
   font-weight: 300;
-  margin-bottom: 1rem;
+  margin-bottom: 0.15rem; // antes 0.25
   background: linear-gradient(135deg, $secondary, $accent);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -541,18 +558,21 @@ $info: #3498db;
 
 .level-subtitle {
   color: $neutral;
-  font-size: 1.1rem;
-  line-height: 1.6;
-  max-width: 600px;
+  font-size: 0.94rem;
+  line-height: 1.4;
+  max-width: 520px;
   margin: 0 auto;
 }
 
-// Cards de nivel - forzar lado a lado
+/* =======================
+   Cards de nivel
+   ======================= */
+
 .level-options {
   display: flex;
   justify-content: center;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  gap: 1.3rem; // un poquito más juntas
+  margin-bottom: 1.25rem; // antes 1.6
   flex-wrap: nowrap;
 }
 
@@ -560,15 +580,15 @@ $info: #3498db;
   background: rgba(255, 255, 255, 0.08);
   border: 2px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
-  padding: 2rem 1.5rem;
+  padding: 1.3rem 1.2rem; // antes 1.6
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(15px);
   position: relative;
   overflow: hidden;
   flex: 1;
-  max-width: 300px;
-  min-width: 260px;
+  max-width: 290px;
+  min-width: 250px;
 
   &::before {
     content: "";
@@ -591,9 +611,9 @@ $info: #3498db;
   }
 
   &:hover {
-    transform: translateY(-8px);
+    transform: translateY(-6px);
     border-color: $accent;
-    box-shadow: 0 20px 40px rgba(255, 107, 107, 0.2);
+    box-shadow: 0 18px 36px rgba(255, 107, 107, 0.2);
     background: rgba(255, 255, 255, 0.12);
   }
 
@@ -601,23 +621,23 @@ $info: #3498db;
     border-color: $accent;
     background: linear-gradient(
       135deg,
-      rgba(184, 58, 45, 0.2),
-      rgba(255, 107, 107, 0.2)
+      rgba(184, 58, 45, 0.22),
+      rgba(255, 107, 107, 0.22)
     );
-    transform: translateY(-4px);
-    box-shadow: 0 15px 35px rgba(255, 107, 107, 0.3);
+    transform: translateY(-3px);
+    box-shadow: 0 14px 30px rgba(255, 107, 107, 0.3);
   }
 }
 
 .card-icon {
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
-  margin: 0 auto 1rem;
+  margin: 0 auto 0.65rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.8rem;
+  font-size: 1.7rem;
   transition: all 0.3s ease;
 
   &.beginner-icon {
@@ -635,18 +655,18 @@ $info: #3498db;
 
 .card-title {
   color: $secondary;
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
   text-align: center;
 }
 
 .card-description {
   color: $neutral;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   text-align: center;
-  margin-bottom: 1rem;
-  line-height: 1.5;
+  margin-bottom: 0.6rem; // menos espacio
+  line-height: 1.4;
 }
 
 .card-features {
@@ -656,8 +676,8 @@ $info: #3498db;
 
   li {
     color: $secondary;
-    font-size: 0.9rem;
-    padding: 0.3rem 0;
+    font-size: 0.88rem;
+    padding: 0.22rem 0;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -671,16 +691,19 @@ $info: #3498db;
   }
 }
 
-// Botón continuar
+/* =======================
+   Botón continuar
+   ======================= */
+
 :deep(.continue-button) {
   width: auto !important;
-  min-width: 200px !important;
-  padding: 1rem 2rem !important;
+  min-width: 190px !important;
+  padding: 0.8rem 1.8rem !important; // menos alto
   background: linear-gradient(135deg, $primary, $accent) !important;
   border: none !important;
   border-radius: 12px !important;
   color: white !important;
-  font-size: 1rem !important;
+  font-size: 0.98rem !important;
   font-weight: 600 !important;
   position: relative;
   overflow: hidden;
@@ -710,7 +733,7 @@ $info: #3498db;
 
   &:hover {
     transform: translateY(-2px) !important;
-    box-shadow: 0 15px 35px rgba(184, 58, 45, 0.4) !important;
+    box-shadow: 0 13px 30px rgba(184, 58, 45, 0.4) !important;
   }
 
   &:disabled {
@@ -721,53 +744,57 @@ $info: #3498db;
   }
 }
 
-// Responsive
+/* =======================
+   Responsive
+   ======================= */
+
 @media (max-width: 768px) {
   .level-container {
-    padding: 2rem;
-    margin: 1rem;
+    padding: 1.2rem 1.3rem 1.3rem;
+    margin: 0.7rem;
     max-width: 95%;
   }
 
   .level-options {
     flex-direction: column;
     align-items: center;
+    gap: 0.9rem;
   }
 
   .level-card {
-    padding: 1.5rem;
+    padding: 1.25rem;
     max-width: 100%;
     min-width: auto;
     width: 100%;
   }
 
   .level-title {
-    font-size: 1.6rem;
+    font-size: 1.45rem;
   }
 
   .level-subtitle {
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
 }
 
 @media (max-width: 480px) {
   .nivel-page {
-    padding: 1rem 0;
+    padding: 0.6rem 0;
   }
 
   .level-container {
-    padding: 1.5rem;
-    margin: 0.5rem;
+    padding: 1.1rem;
+    margin: 0.4rem;
   }
 
   .level-header {
-    margin-bottom: 2rem;
+    margin-bottom: 1.1rem;
   }
 
   .level-icon {
-    width: 60px;
-    height: 60px;
-    font-size: 1.5rem;
+    width: 52px;
+    height: 52px;
+    font-size: 1.4rem;
   }
 }
 </style>

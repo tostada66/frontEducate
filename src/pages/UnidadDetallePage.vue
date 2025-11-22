@@ -1,64 +1,94 @@
 <template>
   <q-page class="q-pa-none bg-grey-1">
-    <!-- 🔷 Vista profesor -->
-    <div
-      v-if="auth.isProfessor"
-      class="bg-primary text-white text-center q-pa-sm"
-    >
-      <q-icon name="visibility" class="q-mr-xs" />
-      Vista previa de la unidad (Profesor)
-    </div>
-
-    <!-- 🖼️ Hero -->
+    <!-- 🖼️ HERO + BOTÓN VOLVER ENCIMA -->
     <div class="unidad-hero">
       <img
         :src="fixUrlUnidad(unidad)"
         alt="Imagen de la unidad"
         class="unidad-hero-img"
       />
+
       <div class="unidad-hero-overlay">
-        <div class="unidad-titulo-container">
-          <h2 class="unidad-titulo">{{ unidad?.titulo }}</h2>
-          <div class="text-white text-caption">
-            Parte del curso: {{ unidad?.curso?.nombre || "Sin curso" }}
-          </div>
+        <!-- 🔙 Botón volver sobre la imagen -->
+        <div class="volver-container">
+          <q-btn
+            color="teal"
+            unelevated
+            icon="arrow_back"
+            label="Volver al Catálogo"
+            class="boton-volver"
+            @click="goBack"
+          />
         </div>
+
+        <!-- Título -->
+        <h2 class="unidad-titulo">
+          <span class="unidad-label">Unidad:</span>
+          {{ unidad?.titulo }}
+        </h2>
       </div>
     </div>
 
-    <!-- 📋 Información -->
-    <div v-if="unidad" class="unidad-info-panel q-pa-lg">
-      <div class="row q-col-gutter-md q-mb-md">
-        <div class="col-12 col-md-4">
-          <span class="info-label">Duración total:</span>
-          <span class="info-value">
-            {{
-              unidad.duracion_total
-                ? unidad.duracion_total + " min"
-                : "No definida"
-            }}
-          </span>
+    <!-- 🔷 Vista profesor debajo del hero -->
+    <div
+      v-if="auth.isProfessor"
+      class="bg-primary text-white text-center q-pa-sm q-mt-sm"
+    >
+      <q-icon name="visibility" class="q-mr-xs" />
+      Vista previa de la unidad (Profesor)
+    </div>
+
+    <!-- 📋 CARD PRINCIPAL DE INFORMACIÓN (más compacta) -->
+    <q-card v-if="unidad" flat bordered class="unidad-info-card q-pa-lg">
+      <!-- Fila de info principal -->
+      <div class="row q-col-gutter-md info-row">
+        <!-- Curso -->
+        <div class="col-12 col-md-4 info-box">
+          <q-icon name="menu_book" class="info-icon text-indigo-7" />
+          <div class="info-text">
+            <span class="info-label">Curso:</span>
+            <span class="info-value">
+              {{ unidad.curso?.nombre || "Sin curso" }}
+            </span>
+          </div>
         </div>
-        <div class="col-12 col-md-8">
-          <span class="info-label">Descripción:</span>
-          <span class="info-value">{{
-            unidad.descripcion || "Sin descripción"
-          }}</span>
+
+        <!-- Duración -->
+        <div class="col-12 col-md-4 info-box">
+          <q-icon name="schedule" class="info-icon text-teal-7" />
+          <div class="info-text">
+            <span class="info-label">Duración:</span>
+            <span class="info-value">
+              {{ formatearDuracion(unidad.duracion_total) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Clases -->
+        <div class="col-12 col-md-4 info-box">
+          <q-icon name="import_contacts" class="info-icon text-orange-7" />
+          <div class="info-text">
+            <span class="info-label">Clases:</span>
+            <span class="info-value">
+              {{ unidad.clases?.length || 0 }}
+            </span>
+          </div>
         </div>
       </div>
 
-      <!-- 🔘 Botones -->
-      <div class="row items-center q-gutter-md q-mt-md">
-        <q-btn
-          color="teal"
-          unelevated
-          icon="arrow_back"
-          label="Volver al Catálogo"
-          class="boton-accion"
-          @click="goBack"
-        />
+      <!-- Descripción en una sola línea tipo curso -->
+      <div class="descripcion-row q-mt-sm">
+        <q-icon name="description" class="info-icon text-blue-7" />
+        <div class="info-text descripcion-inline">
+          <span class="info-label">Descripción:</span>
+          <span class="info-value">
+            {{ unidad.descripcion || "Sin descripción" }}
+          </span>
+        </div>
+      </div>
 
-        <!-- 🧠 Botón examen -->
+      <!-- Examen -->
+      <div class="row items-center q-gutter-md q-mt-md">
         <q-btn
           v-if="puedeDarExamen"
           color="deep-purple-6"
@@ -72,10 +102,10 @@
           @click="irAExamen"
         />
       </div>
-    </div>
+    </q-card>
 
     <!-- 🟣 Filtros -->
-    <div class="text-center q-mt-md">
+    <div class="text-center q-mt-lg q-mb-md">
       <q-chip
         v-for="f in filtros"
         :key="f.value"
@@ -83,7 +113,7 @@
         :color="filtroActual === f.value ? 'primary' : 'grey-4'"
         :text-color="filtroActual === f.value ? 'white' : 'black'"
         @click="filtroActual = f.value"
-        class="q-mx-xs text-weight-medium"
+        class="chip-filtro"
       >
         <q-icon :name="f.icon" class="q-mr-xs" />
         {{ f.label }}
@@ -107,17 +137,27 @@
           :key="clase.idclase"
           clickable
           v-ripple
-          class="clase-item"
+          class="clase-card"
           @click="abrirClase(clase)"
         >
+          <!-- Miniatura del primer video de la clase -->
           <q-item-section avatar>
-            <q-avatar size="56px" color="primary" text-color="white">
-              <q-icon name="menu_book" size="32px" />
+            <q-avatar square size="120px" class="thumb-container">
+              <img
+                :src="getMiniatura(clase)"
+                class="thumb-img"
+                alt="miniatura clase"
+              />
+              <div class="thumb-duration">{{ getDuracionClase(clase) }}</div>
             </q-avatar>
           </q-item-section>
+
+          <!-- Info de la clase -->
           <q-item-section>
-            <q-item-label class="clase-titulo">{{ clase.titulo }}</q-item-label>
-            <q-item-label caption class="clase-desc">
+            <q-item-label class="titulo-clase">
+              {{ clase.titulo }}
+            </q-item-label>
+            <q-item-label caption class="desc-clase">
               {{ clase.descripcion || "Sin descripción" }}
             </q-item-label>
           </q-item-section>
@@ -147,10 +187,12 @@
               height="150px"
               spinner-color="primary"
             />
+
             <q-card-section>
               <div class="text-h6 text-weight-bold text-primary q-mb-xs">
                 {{ j.nombre_tema || j.juego?.nombre }}
               </div>
+
               <div class="text-caption text-grey-7">
                 Nivel {{ j.nivel || 1 }} ·
                 <span :class="j.activo ? 'text-green' : 'text-red'">
@@ -167,7 +209,7 @@
       </div>
     </div>
 
-    <!-- ⏳ Loader -->
+    <!-- Loader -->
     <div class="row justify-center q-mt-lg" v-if="loading">
       <q-spinner-dots color="primary" size="40px" />
     </div>
@@ -190,7 +232,7 @@ const unidad = ref(null);
 const juegos = ref([]);
 const loading = ref(false);
 
-// 🔹 Filtros (Todos / Clases / Juegos)
+/* 🎯 Filtros */
 const filtroActual = ref("todos");
 const filtros = [
   { label: "Todos", value: "todos", icon: "apps" },
@@ -205,7 +247,50 @@ const mostrarJuegos = computed(
   () => filtroActual.value === "todos" || filtroActual.value === "juegos"
 );
 
-// 📦 Cargar unidad y juegos
+/* 📌 Miniatura del video de la clase */
+function getMiniatura(clase) {
+  const video = (clase.contenidos || []).find((c) => c.tipo === "video");
+  if (!video) return "/images/video-placeholder.png";
+  return video.miniatura_publica || video.archivo;
+}
+
+/* ⏱ Duración del video de la clase */
+function getDuracionClase(clase) {
+  const video = (clase.contenidos || []).find((c) => c.tipo === "video");
+  if (!video?.duracion) return "0:00";
+
+  const s = Number(video.duracion);
+  const m = Math.floor(s / 60);
+  const sec = String(s % 60).padStart(2, "0");
+
+  return `${m}:${sec}`;
+}
+
+/* 📌 Fix imagen */
+function fixUrlUnidad(u) {
+  if (!u) return "/images/unidad-placeholder.png";
+  if (u.imagen_url) return u.imagen_url;
+  if (u.imagen) return `http://127.0.0.1:8000/storage/${u.imagen}`;
+  return "/images/unidad-placeholder.png";
+}
+
+/* 🕒 Duración total de la unidad */
+function formatearDuracion(segundos) {
+  if (!segundos || segundos === 0) return "0s";
+
+  const h = Math.floor(segundos / 3600);
+  const m = Math.floor((segundos % 3600) / 60);
+  const s = segundos % 60;
+
+  if (h > 0)
+    return `${h}:${m.toString().padStart(2, "0")}:${s
+      .toString()
+      .padStart(2, "0")}`;
+  if (m > 0) return `${m}:${s.toString().padStart(2, "0")}`;
+  return `${s}s`;
+}
+
+/* 📦 Cargar unidad */
 async function loadUnidad() {
   loading.value = true;
   try {
@@ -214,7 +299,6 @@ async function loadUnidad() {
     unidad.value = data;
     await loadJuegos(idunidad);
   } catch (err) {
-    console.error("❌ Error cargando unidad:", err);
     $q.notify({ type: "negative", message: "Error cargando unidad" });
   } finally {
     loading.value = false;
@@ -225,60 +309,49 @@ async function loadJuegos(idunidad) {
   try {
     const { data } = await api.get(`/juegos/unidad/${idunidad}`);
     juegos.value = data.data || [];
-  } catch (err) {
-    console.warn("⚠️ No se pudieron cargar los juegos:", err);
-  }
+  } catch (_) {}
 }
 
-// 🖼️ Imagen hero
-function fixUrlUnidad(u) {
-  if (!u) return "/images/unidad-placeholder.png";
-  if (u.imagen_url) return u.imagen_url;
-  if (u.imagen) return `http://127.0.0.1:8000/storage/${u.imagen}`;
-  return "/images/unidad-placeholder.png";
-}
-
-// 🔙 Volver
+/* 🔙 Volver */
 function goBack() {
   router.push({ name: "catalogo-cursos" });
 }
 
-// 🎬 Abrir clase
+/* 🎬 Abrir clase */
 function abrirClase(clase) {
   const video = (clase.contenidos || []).find((c) => c.tipo === "video");
+
   const destino = auth.isProfessor
     ? "profesor-contenido-detalle"
     : auth.isAdmin
     ? "admin-contenido-detalle"
     : "contenido-detalle";
 
-  if (video) {
-    router.push({
-      name: destino,
-      params: {
-        idcurso: route.params.idcurso,
-        idunidad: route.params.idunidad,
-        idclase: clase.idclase,
-        idcontenido: video.idcontenido,
-      },
-    });
-  } else {
-    $q.notify({
+  if (!video) {
+    return $q.notify({
       type: "warning",
-      message: "Esta clase no tiene video principal.",
+      message: "Esta clase no tiene video.",
     });
   }
+
+  router.push({
+    name: destino,
+    params: {
+      idcurso: route.params.idcurso,
+      idunidad: route.params.idunidad,
+      idclase: clase.idclase,
+      idcontenido: video.idcontenido,
+    },
+  });
 }
 
-// 🎮 Abrir juego → lleva a pantalla de inicio del juego
+/* 🎮 Abrir juego */
 function abrirJuego(juego) {
-  if (!juego.activo) {
-    $q.notify({
+  if (!juego.activo)
+    return $q.notify({
       type: "warning",
       message: "Este juego aún no está activo.",
     });
-    return;
-  }
 
   router.push({
     name: "juego-inicio",
@@ -290,7 +363,7 @@ function abrirJuego(juego) {
   });
 }
 
-// 🧠 Botón examen
+/* 🧠 Examen */
 const puedeDarExamen = computed(() => {
   const u = unidad.value;
   if (!u?.tiene_examen) return false;
@@ -301,83 +374,214 @@ const puedeDarExamen = computed(() => {
 
 function irAExamen() {
   const examen = unidad.value?.examen;
-  if (!examen) {
+  if (!examen)
     return $q.notify({
       type: "warning",
-      message: "Esta unidad no tiene examen disponible aún.",
+      message: "Esta unidad no tiene examen disponible.",
     });
-  }
 
-  const params = {
-    idcurso: route.params.idcurso,
-    idunidad: route.params.idunidad,
-    idexamen: examen.idexamen,
-  };
-
-  const query = auth.isProfessor || auth.isAdmin ? { preview: true } : {};
-  router.push({ name: "examen-intro", params, query });
+  router.push({
+    name: "examen-intro",
+    params: {
+      idcurso: route.params.idcurso,
+      idunidad: route.params.idunidad,
+      idexamen: examen.idexamen,
+    },
+    query: auth.isProfessor || auth.isAdmin ? { preview: true } : {},
+  });
 }
 
 onMounted(() => loadUnidad());
 </script>
 
 <style scoped>
+/* --- HERO + BOTÓN --- */
 .unidad-hero {
   position: relative;
   width: 100%;
   height: 260px;
   overflow: hidden;
 }
+
 .unidad-hero-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
+
 .unidad-hero-overlay {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: 20px;
+  justify-content: space-between;
+  padding: 16px 30px 40px 30px;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent);
 }
-.unidad-titulo {
-  font-size: 1.8rem;
+
+.boton-volver {
   font-weight: 700;
+  border-radius: 10px;
+  backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.2);
   color: white;
 }
-.unidad-info-panel {
-  background: #fff;
-  border-top: 1px solid #ddd;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+
+/* --- TÍTULO EN HERO --- */
+.unidad-titulo {
+  font-size: 2.4rem;
+  font-weight: 900;
+  color: white;
+  margin: 0;
 }
-.boton-accion {
-  border-radius: 8px;
+
+/* --- CARD PRINCIPAL (tipo panel de curso) --- */
+.unidad-info-card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.08);
+  margin: 14px auto 24px auto;
+  width: 95%;
+  max-width: 1400px;
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid #e0e0e0;
+}
+
+.info-row {
+  border-bottom: 1px solid #eeeeee;
+  padding-bottom: 8px;
+  margin-bottom: 4px;
+}
+
+.info-box {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.info-icon {
+  font-size: 24px;
+  margin-right: 8px;
+}
+
+.info-text {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.info-label {
   font-weight: 600;
-  font-size: 0.9rem;
-  padding: 6px 16px;
+  color: #37474f;
+  margin-right: 6px;
+  font-size: 1.3rem; /* 🔼 antes sin tamaño o más pequeño */
 }
-.clase-item {
-  padding: 18px;
-  min-height: 80px;
+
+.info-value {
+  color: #455a64;
+  font-size: 1.3rem; /* 🔼 un poco más grande */
 }
-.clase-titulo {
-  font-size: 1.1rem;
+/* Descripción alineada en una fila, más limpia */
+.descripcion-row {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 4px;
+}
+
+.descripcion-inline {
+  flex: 1;
+}
+
+.descripcion-inline .info-value {
+  font-size: 1.3rem;
+}
+
+/* Chips de filtro */
+.chip-filtro {
+  font-size: 1rem;
+  padding: 10px 18px !important;
+  border-radius: 12px;
+  margin: 0 4px;
+}
+
+/* 🌟 NUEVO DISEÑO DE CLASES */
+.clase-card {
+  padding: 14px;
+  border-radius: 14px;
+  transition: 0.25s;
+}
+
+.clase-card:hover {
+  background: #f5f7ff;
+  transform: translateY(-3px);
+}
+
+.thumb-container {
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+}
+
+.thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.thumb-duration {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.titulo-clase {
   font-weight: 700;
-  color: #333;
+  font-size: 1.15rem;
+  color: #1a237e;
+  margin-bottom: 6px;
 }
-.clase-desc {
-  font-size: 0.95rem !important;
-  color: #666 !important;
+
+.desc-clase {
+  font-size: 0.9rem;
+  color: #555;
 }
+
+/* 🎮 JUEGOS */
 .juego-card {
   border-radius: 14px;
-  overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: 0.2s;
 }
+
 .juego-card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive básico para la card */
+@media (max-width: 768px) {
+  .unidad-info-card {
+    width: 96%;
+    margin: 10px auto 20px auto;
+  }
+
+  .info-row {
+    padding-bottom: 6px;
+  }
+
+  .info-icon {
+    font-size: 22px;
+  }
+
+  .unidad-titulo {
+    font-size: 2rem;
+  }
 }
 </style>

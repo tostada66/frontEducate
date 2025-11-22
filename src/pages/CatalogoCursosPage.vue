@@ -1,9 +1,7 @@
 <template>
   <q-page class="q-pa-lg bg-grey-2">
     <!-- 🧾 Título -->
-    <div class="text-h5 text-primary text-center q-mb-xl">
-      📚 Catálogo General de Cursos
-    </div>
+    <div class="titulo-catalogo q-mb-xl">📚 Catálogo General de Cursos</div>
 
     <q-separator color="primary" inset />
 
@@ -12,8 +10,8 @@
       <!-- Buscar por nombre -->
       <div class="col-12 col-md-4">
         <div class="q-mb-xs text-grey-7 flex items-center">
-          <q-icon name="search" size="16px" class="q-mr-xs" color="primary" />
-          <span class="text-caption">Buscar por nombre</span>
+          <q-icon name="search" size="18px" class="q-mr-xs" color="primary" />
+          <span class="filtro-label">Buscar por nombre</span>
         </div>
         <q-input
           v-model="filtros.busqueda"
@@ -32,11 +30,11 @@
         <div class="q-mb-xs text-grey-7 flex items-center">
           <q-icon
             name="category"
-            size="16px"
+            size="18px"
             class="q-mr-xs"
             color="secondary"
           />
-          <span class="text-caption">Categoría</span>
+          <span class="filtro-label">Categoría</span>
         </div>
         <q-select
           v-model="filtros.categoria"
@@ -57,14 +55,16 @@
       <!-- Nivel -->
       <div class="col-12 col-md-3">
         <div class="q-mb-xs text-grey-7 flex items-center">
-          <q-icon name="school" size="16px" class="q-mr-xs" color="primary" />
-          <span class="text-caption">Nivel</span>
+          <q-icon name="school" size="18px" class="q-mr-xs" color="primary" />
+          <span class="filtro-label">Nivel</span>
         </div>
         <q-select
           v-model="filtros.nivel"
           :options="nivelesConIcono"
           option-value="value"
           option-label="label"
+          emit-value
+          map-options
           outlined
           rounded
           standout="bg-white text-primary"
@@ -88,8 +88,8 @@
       <!-- Profesor (solo visible para admin) -->
       <div class="col-12 col-md-2" v-if="auth.isAdmin">
         <div class="q-mb-xs text-grey-7 flex items-center">
-          <q-icon name="person" size="16px" class="q-mr-xs" color="purple" />
-          <span class="text-caption">Profesor</span>
+          <q-icon name="person" size="18px" class="q-mr-xs" color="purple" />
+          <span class="filtro-label">Profesor</span>
         </div>
         <q-select
           v-model="filtros.profesor"
@@ -128,7 +128,7 @@
               class="curso-img"
             />
             <div class="curso-overlay">
-              <div class="curso-titulo">{{ curso.nombre }}</div>
+              <div class="curso-titulo">Curso: {{ curso.nombre }}</div>
             </div>
           </div>
 
@@ -136,7 +136,10 @@
           <q-card-section>
             <div class="row items-center justify-between q-mb-sm">
               <div class="row items-center">
-                <span class="info-label q-mr-sm">Categoría:</span>
+                <span class="info-label q-mr-sm">
+                  <q-icon name="category" size="18px" class="q-mr-xs" />
+                  Categoría:
+                </span>
                 <q-badge
                   color="secondary"
                   class="text-caption"
@@ -144,7 +147,10 @@
                 />
               </div>
               <div class="row items-center">
-                <span class="info-label q-mr-sm">Nivel:</span>
+                <span class="info-label q-mr-sm">
+                  <q-icon name="school" size="18px" class="q-mr-xs" />
+                  Nivel:
+                </span>
                 <q-badge
                   color="primary"
                   outline
@@ -155,7 +161,10 @@
             </div>
 
             <div class="q-mb-sm">
-              <span class="info-label">Profesor:</span>
+              <span class="info-label">
+                <q-icon name="person" size="18px" class="q-mr-xs" />
+                Profesor:
+              </span>
               <span class="info-value">
                 {{
                   curso.profesor?.usuario?.nombres
@@ -168,18 +177,24 @@
             </div>
 
             <div class="q-mb-sm">
-              <span class="info-label">Descripción:</span>
+              <span class="info-label">
+                <q-icon name="description" size="18px" class="q-mr-xs" />
+                Descripción:
+              </span>
               <span class="info-value">
                 {{ curso.descripcion || "Sin descripción" }}
               </span>
             </div>
 
             <div>
-              <span class="info-label">Duración:</span>
+              <span class="info-label">
+                <q-icon name="schedule" size="18px" class="q-mr-xs" />
+                Duración:
+              </span>
               <span class="info-value">
                 {{
                   curso.duracion_total
-                    ? curso.duracion_total + " hrs"
+                    ? formatearDuracion(curso.duracion_total)
                     : "No definida"
                 }}
               </span>
@@ -247,7 +262,35 @@ const nivelesConIcono = [
   { label: "Avanzado", value: "Avanzado", icon: "workspace_premium" },
 ];
 
-// 🧠 Cargar todos los cursos
+// 🔹 Normaliza texto (sin tildes, espacios ni mayúsculas)
+function normalize(input) {
+  if (input == null) return "";
+  const str = typeof input === "string" ? input : String(input);
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+}
+
+// 🕒 Formatear duración (segundos → h:mm:ss / m:ss / Xs)
+function formatearDuracion(segundos) {
+  if (!segundos || segundos <= 0) return "No definida";
+
+  const h = Math.floor(segundos / 3600);
+  const m = Math.floor((segundos % 3600) / 60);
+  const s = segundos % 60;
+
+  if (h > 0) {
+    return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
+  if (m > 0) {
+    return `${m}:${String(s).padStart(2, "0")}`;
+  }
+  return `${s}s`;
+}
+
+// 🧠 Cargar cursos
 async function loadCursos() {
   loading.value = true;
   try {
@@ -281,12 +324,12 @@ async function loadCursos() {
       ).values(),
     ];
 
-    // Si viene desde el listado de profesores, aplicar filtro inicial
+    // prefiltrar por profesor si llega en la ruta
     if (route.params.idusuario) {
       filtros.value.profesor = parseInt(route.params.idusuario);
     }
 
-    // Si es estudiante, cargar sus cursos matriculados
+    // marcar cursos matriculados si es estudiante
     if (auth.isStudent) {
       const { data: inscritos } = await api.get("/mis-cursos");
       const idsInscritos = inscritos.map((m) => m.idcurso);
@@ -338,14 +381,15 @@ function fixUrl(curso) {
 
 const cursosFiltrados = computed(() => {
   return cursos.value.filter((curso) => {
-    const nombre = curso.nombre?.toLowerCase() || "";
-    const busqueda = filtros.value.busqueda?.toLowerCase() || "";
+    const nombre = normalize(curso.nombre);
+    const busqueda = normalize(filtros.value.busqueda);
 
     const matchBusqueda = !busqueda || nombre.includes(busqueda);
     const matchCategoria =
       !filtros.value.categoria || curso.idcategoria === filtros.value.categoria;
     const matchNivel =
-      !filtros.value.nivel || curso.nivel === filtros.value.nivel;
+      !filtros.value.nivel ||
+      normalize(curso.nivel) === normalize(filtros.value.nivel);
     const matchProfesor =
       !filtros.value.profesor ||
       curso.profesor?.idusuario === filtros.value.profesor;
@@ -354,17 +398,36 @@ const cursosFiltrados = computed(() => {
   });
 });
 
-onMounted(() => {
-  loadCursos();
-});
+onMounted(loadCursos);
 </script>
 
 <style scoped>
+/* 🔹 Título principal */
+.titulo-catalogo {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1565c0;
+  text-align: center;
+}
+
+/* 🔹 Caja de filtros */
 .filtros-container {
   background: #ffffff;
   padding: 16px;
   border-radius: 12px;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+/* Texto de las etiquetas de los filtros */
+.filtro-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #37474f;
+}
+
+/* Texto dentro de inputs/selects del filtro */
+:deep(.filtros-container .q-field__native) {
+  font-size: 1rem;
 }
 
 .curso-card {
@@ -376,6 +439,7 @@ onMounted(() => {
   transform: translateY(-6px);
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.15);
 }
+
 .curso-img-container {
   position: relative;
   width: 100%;
@@ -391,24 +455,31 @@ onMounted(() => {
 .curso-card:hover .curso-img {
   transform: scale(1.1);
 }
+
 .curso-overlay {
   position: absolute;
   bottom: 0;
   width: 100%;
-  padding: 8px 12px;
+  padding: 10px 14px;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.65), transparent);
 }
 .curso-titulo {
   color: #fff;
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.3rem;
+  font-weight: 700;
 }
+
+/* Info de la tarjeta */
 .info-label {
   font-weight: 600;
+  font-size: 1rem;
   color: #37474f;
   margin-right: 4px;
+  display: inline-flex;
+  align-items: center;
 }
 .info-value {
+  font-size: 0.98rem;
   color: #455a64;
 }
 </style>

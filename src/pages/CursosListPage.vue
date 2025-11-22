@@ -11,7 +11,7 @@
 
       <q-space />
 
-      <div class="text-h4 text-weight-bold text-primary text-center">
+      <div class="titulo-gestion">
         {{ auth.isAdmin ? "Gestión de Cursos" : "Mis Cursos" }}
       </div>
 
@@ -141,29 +141,79 @@
                 alt="imagen curso"
               />
               <div class="curso-overlay">
-                <div class="curso-titulo">{{ curso.nombre }}</div>
+                <div class="curso-titulo">Curso: {{ curso.nombre }}</div>
               </div>
             </div>
 
             <q-card-section>
-              <div class="text-caption text-grey-7 q-mb-xs">
-                {{ curso.categoria_nombre || "Sin categoría" }} ·
-                {{ curso.nivel || "General" }}
+              <div class="detalle-linea">
+                <q-icon
+                  name="category"
+                  size="18px"
+                  class="q-mr-xs text-primary"
+                />
+                <span class="detalle-label">Categoría:</span>
+                <span class="detalle-value">
+                  {{ curso.categoria_nombre || "Sin categoría" }}
+                </span>
               </div>
-              <div class="text-body2">
+
+              <div class="detalle-linea">
+                <q-icon
+                  name="school"
+                  size="18px"
+                  class="q-mr-xs text-primary"
+                />
+                <span class="detalle-label">Nivel:</span>
+                <span class="detalle-value">
+                  {{ curso.nivel || "General" }}
+                </span>
+              </div>
+
+              <!-- ⏱ Duración -->
+              <div class="detalle-linea">
+                <q-icon
+                  name="schedule"
+                  size="18px"
+                  class="q-mr-xs text-primary"
+                />
+                <span class="detalle-label">Duración:</span>
+                <span class="detalle-value">
+                  {{
+                    curso.duracion_total
+                      ? formatearDuracion(curso.duracion_total)
+                      : curso.duracion_estimada
+                      ? formatearDuracion(curso.duracion_estimada * 60)
+                      : "No definida"
+                  }}
+                </span>
+              </div>
+
+              <div class="detalle-linea">
+                <q-icon name="sell" size="18px" class="q-mr-xs text-primary" />
+                <span class="detalle-label">Estado:</span>
                 <q-badge
                   :color="getEstadoColor(curso.estado)"
-                  class="text-white text-weight-bold"
+                  class="text-white text-weight-bold q-ml-xs"
                 >
                   {{ curso.estado }}
                 </q-badge>
               </div>
+
               <div
                 v-if="auth.isAdmin && curso.profesor?.usuario"
-                class="text-caption text-grey q-mt-xs"
+                class="detalle-linea"
               >
-                👨‍🏫 {{ curso.profesor.usuario.nombres }}
-                {{ curso.profesor.usuario.apellidos }}
+                <q-icon
+                  name="person"
+                  size="18px"
+                  class="q-mr-xs text-primary"
+                />
+                <span class="detalle-label">Profesor:</span>
+                <span class="detalle-value">
+                  {{ curso.profesor.usuario.nombres }}
+                  {{ curso.profesor.usuario.apellidos }}
+                </span>
               </div>
             </q-card-section>
 
@@ -229,9 +279,17 @@
           </q-td>
         </template>
 
-        <!-- 🔹 Mantenemos tus acciones intactas -->
+        <!-- ⏱ Duración formateada -->
         <template #body-cell-duracion="props">
-          <q-td>{{ props.row.duracion_estimada || 0 }} min</q-td>
+          <q-td>
+            {{
+              props.row.duracion_total
+                ? formatearDuracion(props.row.duracion_total)
+                : props.row.duracion_estimada
+                ? formatearDuracion(props.row.duracion_estimada * 60)
+                : "0s"
+            }}
+          </q-td>
         </template>
 
         <template #body-cell-acciones="props">
@@ -394,6 +452,23 @@ const filteredCursos = computed(() =>
   })
 );
 
+/* ⏱ Formatear duración (segundos → h:mm:ss / m:ss / Xs) */
+function formatearDuracion(segundos) {
+  if (!segundos || segundos <= 0) return "0s";
+
+  const h = Math.floor(segundos / 3600);
+  const m = Math.floor((segundos % 3600) / 60);
+  const s = segundos % 60;
+
+  if (h > 0) {
+    return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
+  if (m > 0) {
+    return `${m}:${String(s).padStart(2, "0")}`;
+  }
+  return `${s}s`;
+}
+
 /* ✅ Exportar Excel para ambos roles */
 async function exportToExcel() {
   try {
@@ -495,6 +570,14 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 🔹 Título principal de la página */
+.titulo-gestion {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1565c0;
+  text-align: center;
+}
+
 /* 🎨 Filtros blancos */
 .bg-filtros {
   background: #ffffff;
@@ -579,7 +662,24 @@ onMounted(() => {
 }
 .curso-titulo {
   color: #fff;
-  font-size: 1.1rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+/* Detalles dentro de la card */
+.detalle-linea {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.detalle-label {
   font-weight: 600;
+  font-size: 0.98rem;
+  color: #37474f;
+  margin-right: 4px;
+}
+.detalle-value {
+  font-size: 0.98rem;
+  color: #455a64;
 }
 </style>

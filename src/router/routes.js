@@ -19,19 +19,25 @@ const routes = [
         component: () => import("pages/IndexPage.vue"),
         meta: { requiresAuth: true },
       },
-
-      // 🔐 Públicas
       {
         path: "login",
         name: "login",
         component: () => import("pages/LoginPage.vue"),
-        meta: { hideDrawer: true, public: true },
+        meta: {
+          public: true,
+          hideDrawer: true, // oculta el drawer
+          hideHeader: true, // ⬅️ oculta también el header
+        },
       },
       {
         path: "register",
         name: "register",
         component: () => import("pages/RegisterPage.vue"),
-        meta: { hideDrawer: true, public: true },
+        meta: {
+          public: true,
+          hideDrawer: true, // oculta el drawer
+          hideHeader: true, // ⬅️ oculta también el header
+        },
       },
       {
         path: "password/reset",
@@ -45,13 +51,21 @@ const routes = [
         path: "onboarding/nivel",
         name: "onb-nivel",
         component: () => import("pages/OnbNivelPage.vue"),
-        meta: { hideDrawer: true, public: true },
+        meta: {
+          public: true,
+          hideDrawer: true, // oculta el drawer
+          hideHeader: true, // ⬅️ oculta también el header
+        },
       },
       {
         path: "onboarding/intereses",
         name: "onb-intereses",
         component: () => import("pages/OnbInteresesPage.vue"),
-        meta: { hideDrawer: true, public: true },
+        meta: {
+          public: true,
+          hideDrawer: true, // oculta el drawer
+          hideHeader: true, // ⬅️ oculta también el header
+        },
       },
 
       // ✅ Perfil general
@@ -59,7 +73,11 @@ const routes = [
         path: "profile",
         name: "profile",
         component: () => import("pages/ProfilePage.vue"),
-        meta: { hideDrawer: true, public: true },
+        meta: {
+          public: true,
+          hideDrawer: true, // oculta el drawer
+          hideHeader: true, // ⬅️ oculta también el header
+        },
       },
       {
         path: "profile/view",
@@ -73,7 +91,11 @@ const routes = [
         path: "register/profesor/profile",
         name: "register-profesor-profile",
         component: () => import("pages/ProfileProfesorPage.vue"),
-        meta: { hideDrawer: true, public: true },
+        meta: {
+          public: true,
+          hideDrawer: true, // oculta el drawer
+          hideHeader: true, // ⬅️ oculta también el header
+        },
       },
       {
         path: "profesor/profile",

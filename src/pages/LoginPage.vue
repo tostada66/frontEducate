@@ -364,11 +364,8 @@ function submitReset() {
   });
 }
 </script>
-
 <style lang="scss" scoped>
-// ======================
 // Variables de colores
-// ======================
 $primary: #b83a2d;
 $accent: #ff6b6b;
 $secondary: #ecf0f1;
@@ -377,29 +374,6 @@ $bg-dark: #111836;
 $bg-card: #19193b;
 $warning: #f39c12;
 
-// ======================
-// Correcciones globales
-// ======================
-
-// Color de mensajes de error
-:deep(.q-field__messages) {
-  color: #ff4d6d !important; /* rosado fuerte */
-  font-weight: 600;
-}
-
-// Fix para quitar fondo blanco en autocompletar
-:deep(input:-webkit-autofill),
-:deep(input:-webkit-autofill:hover),
-:deep(input:-webkit-autofill:focus),
-:deep(input:-webkit-autofill:active) {
-  -webkit-box-shadow: 0 0 0px 1000px $bg-card inset !important;
-  -webkit-text-fill-color: $secondary !important;
-  transition: background-color 5000s ease-in-out 0s !important;
-}
-
-// ======================
-// Página
-// ======================
 .login-page {
   min-height: 100vh;
   display: flex;
@@ -411,9 +385,8 @@ $warning: #f39c12;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-// ======================
-// Fondo animado
-// ======================
+/* ---------- Fondo animado ---------- */
+
 .bubble-bg {
   position: absolute;
   top: 0;
@@ -482,9 +455,8 @@ $warning: #f39c12;
   }
 }
 
-// ======================
-// Ondas
-// ======================
+/* ---------- Ondas ---------- */
+
 .wave-bg {
   position: absolute;
   bottom: 0;
@@ -523,16 +495,15 @@ $warning: #f39c12;
   }
 }
 
-// ======================
-// Contenedor principal
-// ======================
+/* ---------- Card principal (más baja) ---------- */
+
 .login-container {
   background: rgba(25, 25, 59, 0.25);
   backdrop-filter: blur(20px);
   border-radius: 20px;
-  padding: 2.5rem;
+  padding: 1.8rem 1.7rem; // ↓ antes 2.5rem
   width: 100%;
-  max-width: 400px;
+  max-width: 380px; // ↓ un poco más angosta
   border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2);
   animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -567,24 +538,23 @@ $warning: #f39c12;
   }
 }
 
-// ======================
-// Header
-// ======================
+/* ---------- Header (más compacto) ---------- */
+
 .login-header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.1rem; // ↓ antes 2rem
 }
 
 .logo {
-  width: 60px;
-  height: 60px;
+  width: 46px; // ↓ antes 60px
+  height: 46px;
   background: linear-gradient(135deg, $primary, $accent);
   border-radius: 50%;
-  margin: 0 auto 1rem;
+  margin: 0 auto 0.35rem; // ↓ antes 1rem
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   color: white;
   animation: logoSpin 2s ease-in-out infinite;
   cursor: pointer;
@@ -606,9 +576,9 @@ $warning: #f39c12;
 
 .login-title {
   color: $secondary;
-  font-size: 1.8rem;
-  font-weight: 300;
-  margin-bottom: 0.5rem;
+  font-size: 1.7rem;
+  font-weight: 400;
+  margin: 0.1rem 0 0.15rem; // ↓
   background: linear-gradient(135deg, $secondary, $accent);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -618,16 +588,16 @@ $warning: #f39c12;
 .login-subtitle {
   color: $neutral;
   font-size: 0.95rem;
+  margin-bottom: 0.6rem; // ↓
 }
 
-// ======================
-// Banners
-// ======================
+/* ---------- Banners ---------- */
+
 .banner-success,
 .banner-error {
-  padding: 1rem;
-  border-radius: 12px;
-  margin-bottom: 1rem;
+  padding: 0.8rem;
+  border-radius: 10px;
+  margin-bottom: 0.8rem;
   font-size: 0.9rem;
 }
 
@@ -643,27 +613,27 @@ $warning: #f39c12;
   color: #f44336;
 }
 
-// ======================
-// Formulario
-// ======================
+/* ---------- Formulario ---------- */
+
 .login-form {
   width: 100%;
 }
 
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.85rem; // ↓ antes 1.5rem
   position: relative;
 }
 
 .password-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.85rem; // ↓
 }
 
 .input-wrapper {
   position: relative;
 }
 
-// Inputs personalizados
+/* Inputs más bajos */
+
 :deep(.custom-input) {
   .q-field__control {
     background: rgba(255, 255, 255, 0.08) !important;
@@ -672,10 +642,7 @@ $warning: #f39c12;
     backdrop-filter: blur(10px);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-    &:before {
-      display: none !important;
-    }
-
+    &:before,
     &:after {
       display: none !important;
     }
@@ -683,7 +650,7 @@ $warning: #f39c12;
 
   .q-field__native {
     color: $secondary !important;
-    padding: 1.2rem 1rem 0.8rem !important;
+    padding: 0.85rem 1rem 0.5rem !important; // ↓ altura
     font-size: 1rem;
     background: transparent !important;
   }
@@ -706,10 +673,11 @@ $warning: #f39c12;
   }
 }
 
-// Label flotante
+/* Label flotante */
+
 .floating-label {
   position: absolute;
-  top: 0.5rem;
+  top: 0.35rem;
   left: 1rem;
   color: $accent;
   font-size: 0.75rem;
@@ -728,9 +696,8 @@ $warning: #f39c12;
   }
 }
 
-// ======================
-// Password
-// ======================
+/* Password */
+
 .password-container {
   position: relative;
 }
@@ -744,10 +711,9 @@ $warning: #f39c12;
   }
 }
 
-// ✅ Link "Olvidaste tu contraseña"
 .forgot-password {
   text-align: right;
-  margin-top: 0.5rem;
+  margin-top: 0.35rem;
 
   a {
     color: $accent;
@@ -762,19 +728,18 @@ $warning: #f39c12;
   }
 }
 
-// ======================
-// Botón submit
-// ======================
+/* ---------- Botón submit ---------- */
+
 :deep(.submit-button) {
   width: 100%;
-  padding: 1rem !important;
+  padding: 0.9rem !important;
   background: linear-gradient(135deg, $primary, $accent) !important;
   border: none !important;
   border-radius: 12px !important;
   color: white !important;
   font-size: 1rem !important;
   font-weight: 600 !important;
-  margin: 1rem 0 !important;
+  margin: 0.7rem 0 !important; // ↓
   position: relative;
   overflow: hidden;
   transition: all 0.3s ease;
@@ -809,12 +774,11 @@ $warning: #f39c12;
   }
 }
 
-// ======================
-// Footer
-// ======================
+/* ---------- Footer ---------- */
+
 .form-footer {
   text-align: center;
-  margin-top: 2rem;
+  margin-top: 1.1rem; // ↓ antes 2rem
 }
 
 .register-link {
@@ -834,455 +798,9 @@ $warning: #f39c12;
   }
 }
 
-// ======================
-// Responsive
-// ======================
-@media (max-width: 480px) {
-  .login-container {
-    margin: 1rem;
-    padding: 2rem 1.5rem;
-  }
+/* ---------- Modal reset (igual que antes) ---------- */
+/* (no lo toco casi para no romper nada) */
 
-  .login-title {
-    font-size: 1.6rem;
-  }
-
-  .form-footer {
-    margin-top: 1.5rem;
-  }
-}
-</style>
-
-<style lang="scss" scoped>
-// Variables de colores
-$primary: #b83a2d;
-$accent: #ff6b6b;
-$secondary: #ecf0f1;
-$neutral: #7f8c8d;
-$bg-dark: #111836;
-$bg-card: #19193b;
-$warning: #f39c12;
-
-.login-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: $bg-dark;
-  position: relative;
-  overflow: hidden;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-}
-
-// Fondo animado con burbujas
-.bubble-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.bubble {
-  position: absolute;
-  border-radius: 50%;
-  opacity: 0.1;
-  animation: bubbleFloat 20s infinite ease-in-out;
-
-  &.bubble-1 {
-    width: 120px;
-    height: 120px;
-    background: radial-gradient(circle, $accent, $primary);
-    left: 10%;
-    animation-delay: 0s;
-  }
-
-  &.bubble-2 {
-    width: 80px;
-    height: 80px;
-    background: radial-gradient(circle, $warning, $accent);
-    left: 80%;
-    animation-delay: 5s;
-  }
-
-  &.bubble-3 {
-    width: 200px;
-    height: 200px;
-    background: radial-gradient(circle, $primary, $bg-card);
-    left: 60%;
-    animation-delay: 10s;
-  }
-
-  &.bubble-4 {
-    width: 60px;
-    height: 60px;
-    background: radial-gradient(circle, $accent, transparent);
-    left: 30%;
-    animation-delay: 15s;
-  }
-}
-
-@keyframes bubbleFloat {
-  0%,
-  100% {
-    transform: translateY(100vh) scale(0) rotate(0deg);
-    opacity: 0;
-  }
-  10% {
-    opacity: 0.1;
-    transform: scale(1);
-  }
-  90% {
-    opacity: 0.1;
-  }
-  100% {
-    transform: translateY(-20vh) scale(1.2) rotate(360deg);
-    opacity: 0;
-  }
-}
-
-// Ondas de fondo
-.wave-bg {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 200px;
-  background: linear-gradient(180deg, transparent, rgba(255, 107, 107, 0.05));
-  z-index: 1;
-  pointer-events: none;
-}
-
-.wave {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 200%;
-  height: 100px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(184, 58, 45, 0.1),
-    transparent,
-    rgba(255, 107, 107, 0.1),
-    transparent
-  );
-  animation: wave 15s ease-in-out infinite;
-}
-
-@keyframes wave {
-  0%,
-  100% {
-    transform: translateX(-50%) rotate(0deg);
-  }
-  50% {
-    transform: translateX(-50%) rotate(180deg);
-  }
-}
-
-// Contenedor principal
-.login-container {
-  background: rgba(25, 25, 59, 0.25);
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
-  padding: 2.5rem;
-  width: 100%;
-  max-width: 400px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2);
-  animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  position: relative;
-  z-index: 2;
-
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 107, 107, 0.5),
-      transparent
-    );
-    border-radius: 20px 20px 0 0;
-  }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 40px, 0);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
-}
-
-// Header
-.login-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.logo {
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg, $primary, $accent);
-  border-radius: 50%;
-  margin: 0 auto 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  color: white;
-  animation: logoSpin 2s ease-in-out infinite;
-  cursor: pointer;
-
-  &:hover {
-    animation: logoSpin 0.5s ease-in-out;
-  }
-}
-
-@keyframes logoSpin {
-  0%,
-  100% {
-    transform: rotate(0deg) scale(1);
-  }
-  50% {
-    transform: rotate(180deg) scale(1.1);
-  }
-}
-
-.login-title {
-  color: $secondary;
-  font-size: 1.8rem;
-  font-weight: 300;
-  margin-bottom: 0.5rem;
-  background: linear-gradient(135deg, $secondary, $accent);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.login-subtitle {
-  color: $neutral;
-  font-size: 0.95rem;
-}
-
-// Banners
-.banner-success,
-.banner-error {
-  padding: 1rem;
-  border-radius: 12px;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
-}
-
-.banner-success {
-  background: rgba(76, 175, 80, 0.15);
-  border: 1px solid rgba(76, 175, 80, 0.3);
-  color: #4caf50;
-}
-
-.banner-error {
-  background: rgba(244, 67, 54, 0.15);
-  border: 1px solid rgba(244, 67, 54, 0.3);
-  color: #f44336;
-}
-
-// Formulario
-.login-form {
-  width: 100%;
-}
-
-.form-group {
-  margin-bottom: 1.5rem;
-  position: relative;
-}
-
-.password-group {
-  margin-bottom: 1.5rem;
-}
-
-.input-wrapper {
-  position: relative;
-}
-
-// Input personalizado
-:deep(.custom-input) {
-  .q-field__control {
-    background: rgba(255, 255, 255, 0.08) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-radius: 12px !important;
-    backdrop-filter: blur(10px);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-    &:before {
-      display: none !important;
-    }
-
-    &:after {
-      display: none !important;
-    }
-  }
-
-  .q-field__native {
-    color: $secondary !important;
-    padding: 1.2rem 1rem 0.8rem !important;
-    font-size: 1rem;
-    background: transparent !important;
-  }
-
-  .q-field__control-container {
-    background: transparent !important;
-  }
-
-  input {
-    background: transparent !important;
-  }
-
-  &.q-field--focused {
-    .q-field__control {
-      border-color: $accent !important;
-      background: rgba(255, 255, 255, 0.12) !important;
-      box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.15) !important;
-      transform: translateY(-1px);
-    }
-
-    .q-field__native {
-      background: transparent !important;
-    }
-  }
-}
-
-// Label flotante personalizado
-.floating-label {
-  position: absolute;
-  top: 0.5rem;
-  left: 1rem;
-  color: $accent;
-  font-size: 0.75rem;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  pointer-events: none;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  user-select: none;
-  z-index: 1;
-  opacity: 0.9;
-
-  &.active {
-    color: $accent;
-    opacity: 1;
-  }
-}
-
-// Password container
-.password-container {
-  position: relative;
-}
-
-:deep(.password-toggle-btn) {
-  color: $neutral !important;
-
-  &:hover {
-    color: $accent !important;
-    background: rgba(255, 107, 107, 0.1) !important;
-  }
-}
-
-.forgot-password {
-  text-align: right;
-  margin-top: 0.5rem;
-
-  a {
-    color: $accent;
-    text-decoration: none;
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
-
-    &:hover {
-      color: $primary;
-      text-decoration: underline;
-    }
-  }
-}
-
-// Botón submit
-:deep(.submit-button) {
-  width: 100%;
-  padding: 1rem !important;
-  background: linear-gradient(135deg, $primary, $accent) !important;
-  border: none !important;
-  border-radius: 12px !important;
-  color: white !important;
-  font-size: 1rem !important;
-  font-weight: 600 !important;
-  margin: 1rem 0 !important;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.3),
-      transparent
-    );
-    transition: left 0.6s ease;
-  }
-
-  &:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 15px 35px rgba(184, 58, 45, 0.4) !important;
-
-    &::before {
-      left: 100%;
-    }
-  }
-
-  &:active {
-    transform: translateY(0) !important;
-  }
-}
-
-// Footer
-.form-footer {
-  text-align: center;
-  margin-top: 2rem;
-}
-
-.register-link {
-  color: $neutral;
-  font-size: 0.95rem;
-
-  a {
-    color: $accent;
-    text-decoration: none;
-    font-weight: 500;
-    transition: all 0.3s ease;
-
-    &:hover {
-      color: $primary;
-      text-decoration: underline;
-    }
-  }
-}
-
-// Modal Reset Password
 .reset-modal-overlay {
   position: relative;
   width: 100%;
@@ -1398,7 +916,6 @@ $warning: #f39c12;
   line-height: 1.4;
 }
 
-// Reset form
 .reset-form-section {
   margin-top: 1rem;
 }
@@ -1420,10 +937,7 @@ $warning: #f39c12;
     backdrop-filter: blur(10px);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-    &:before {
-      display: none !important;
-    }
-
+    &:before,
     &:after {
       display: none !important;
     }
@@ -1450,10 +964,6 @@ $warning: #f39c12;
       background: rgba(255, 255, 255, 0.12) !important;
       box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.15) !important;
       transform: translateY(-1px);
-    }
-
-    .q-field__native {
-      background: transparent !important;
     }
   }
 }
@@ -1499,7 +1009,6 @@ $warning: #f39c12;
   color: #f44336;
 }
 
-// Reset buttons
 .reset-button-group {
   display: flex;
   gap: 1rem;
@@ -1566,19 +1075,20 @@ $warning: #f39c12;
   }
 }
 
-// Responsive
+/* ---------- Responsive ---------- */
+
 @media (max-width: 480px) {
   .login-container {
-    margin: 1rem;
-    padding: 2rem 1.5rem;
+    margin: 0.9rem;
+    padding: 1.6rem 1.3rem; // ↓ también en móvil
   }
 
   .login-title {
-    font-size: 1.6rem;
+    font-size: 1.55rem;
   }
 
   .form-footer {
-    margin-top: 1.5rem;
+    margin-top: 1rem;
   }
 
   .reset-modal-container {

@@ -164,7 +164,7 @@
 /* 🔸 ACCEDER */
 .btn-sutil.amarillo {
   background: #4caf50;
-  color: #111;
+  color: #ffffff;
 }
 .btn-sutil.amarillo:hover {
   background: #55c459;

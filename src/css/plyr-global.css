@@ -1,0 +1,14 @@
+.plyr {
+  position: relative;
+  display: block;
+  max-width: 100%;
+}
+.plyr__controls {
+  display: flex !important;
+}
+
+/* oculta controles nativos WebKit para que no tapen a Plyr */
+video::-webkit-media-controls,
+video::-webkit-media-controls-enclosure {
+  display: none !important;
+}

@@ -267,7 +267,13 @@
 
         <!-- Botones -->
         <div class="button-group">
-          <q-btn flat label="VOLVER" to="/" class="back-button" no-caps />
+          <q-btn
+            flat
+            label="VOLVER"
+            :to="{ name: 'login' }"
+            class="back-button"
+            no-caps
+          />
 
           <q-btn
             unelevated
@@ -562,10 +568,11 @@ $warning: #f39c12;
   position: relative;
   overflow-x: hidden;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  padding: 2rem 0;
+  padding: 1.2rem 0; // un poco menos
 }
 
-// Fondo animado con burbujas
+/* ---------- Fondo animado ---------- */
+
 .bubble-bg {
   position: fixed;
   top: 0;
@@ -634,7 +641,8 @@ $warning: #f39c12;
   }
 }
 
-// Ondas de fondo
+/* Ondas de fondo */
+
 .wave-bg {
   position: fixed;
   bottom: 0;
@@ -673,14 +681,15 @@ $warning: #f39c12;
   }
 }
 
-// Contenedor principal
+/* ---------- Contenedor principal ---------- */
+
 .register-container {
   background: rgba(25, 25, 59, 0.25);
   backdrop-filter: blur(20px);
   border-radius: 20px;
-  padding: 2.5rem;
+  padding: 1.7rem 2rem;
   width: 100%;
-  max-width: 600px;
+  max-width: 540px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2);
   animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -715,22 +724,27 @@ $warning: #f39c12;
   }
 }
 
-// Header
+/* ---------- Header ---------- */
+
 .register-header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 0.6rem; // espacio hacia los inputs
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem; // separación mínima entre logo, título y subtítulo
 }
 
 .logo {
-  width: 60px;
-  height: 60px;
+  width: 40px;
+  height: 40px;
   background: linear-gradient(135deg, $primary, $accent);
   border-radius: 50%;
-  margin: 0 auto 1rem;
+  margin: 0; // sin margen extra
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   color: white;
   animation: logoSpin 2s ease-in-out infinite;
   cursor: pointer;
@@ -752,9 +766,10 @@ $warning: #f39c12;
 
 .register-title {
   color: $secondary;
-  font-size: 1.8rem;
-  font-weight: 300;
-  margin-bottom: 0.5rem;
+  font-size: 1.7rem;
+  font-weight: 500;
+  margin: 0; // pegado al logo/subtítulo
+  line-height: 1.1;
   background: linear-gradient(135deg, $secondary, $accent);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -763,15 +778,19 @@ $warning: #f39c12;
 
 .register-subtitle {
   color: $neutral;
-  font-size: 0.95rem;
+  font-size: 1rem;
+  margin: 0;
+  margin-top: 0.1rem; // un pelín de espacio bajo el título
+  line-height: 1.2;
 }
 
-// Banners
+/* ---------- Banners ---------- */
+
 .banner-success,
 .banner-error {
-  padding: 1rem;
-  border-radius: 12px;
-  margin-bottom: 1rem;
+  padding: 0.7rem;
+  border-radius: 10px;
+  margin-bottom: 0.65rem;
   font-size: 0.9rem;
 }
 
@@ -787,7 +806,8 @@ $warning: #f39c12;
   color: #f44336;
 }
 
-// Formulario
+/* ---------- Formulario ---------- */
+
 .register-form {
   width: 100%;
 }
@@ -795,12 +815,13 @@ $warning: #f39c12;
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 0.4rem; // antes 0.5rem
+  margin-bottom: 0.35rem; // antes 0.6rem
 }
 
+/* Wrapper de cada input */
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.4rem; // antes 0.65rem
   position: relative;
 }
 
@@ -808,7 +829,8 @@ $warning: #f39c12;
   position: relative;
 }
 
-// Input personalizado
+/* Inputs compactos con letra más grande */
+
 :deep(.custom-input) {
   .q-field__control {
     background: rgba(255, 255, 255, 0.08) !important;
@@ -817,10 +839,7 @@ $warning: #f39c12;
     backdrop-filter: blur(10px);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-    &:before {
-      display: none !important;
-    }
-
+    &:before,
     &:after {
       display: none !important;
     }
@@ -828,7 +847,7 @@ $warning: #f39c12;
 
   .q-field__native {
     color: $secondary !important;
-    padding: 1.2rem 1rem 0.8rem !important;
+    padding: 0.75rem 1rem 0.45rem !important; // altura más baja
     font-size: 1rem;
     background: transparent !important;
   }
@@ -848,24 +867,22 @@ $warning: #f39c12;
       box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.15) !important;
       transform: translateY(-1px);
     }
-
-    .q-field__native {
-      background: transparent !important;
-    }
   }
 }
 
-// Input clickeable (para rol)
+/* Input clickeable (rol) */
+
 :deep(.clickable-input) {
   .q-field__control {
     cursor: pointer !important;
   }
 }
 
-// Label flotante personalizado
+/* Label flotante */
+
 .floating-label {
   position: absolute;
-  top: 0.5rem;
+  top: 0.3rem;
   left: 1rem;
   color: $accent;
   font-size: 0.75rem;
@@ -884,16 +901,16 @@ $warning: #f39c12;
   }
 }
 
-// Hint de campo
 .field-hint {
   color: $neutral;
   font-size: 0.8rem;
-  margin-top: 0.25rem;
+  margin-top: 0.05rem; // antes 0.15rem
   margin-left: 1rem;
   opacity: 0.8;
 }
 
-// Password toggle y dropdown
+/* Toggle password / dropdown */
+
 :deep(.password-toggle-btn),
 :deep(.dropdown-btn) {
   color: $neutral !important;
@@ -904,21 +921,22 @@ $warning: #f39c12;
   }
 }
 
-// Botones principales
+/* ---------- Botones ---------- */
+
 .button-group {
   display: flex;
-  gap: 1rem;
-  margin-top: 2rem;
+  gap: 0.7rem;
+  margin-top: 0.9rem; // menos espacio encima de los botones
 }
 
 :deep(.back-button) {
   flex: 1;
-  padding: 1rem !important;
+  padding: 0.8rem !important;
   background: rgba(255, 255, 255, 0.05) !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
   border-radius: 12px !important;
   color: $accent !important;
-  font-size: 0.9rem !important;
+  font-size: 0.95rem !important;
   font-weight: 500 !important;
   transition: all 0.3s ease;
 
@@ -932,7 +950,7 @@ $warning: #f39c12;
 
 :deep(.submit-button) {
   flex: 2;
-  padding: 1rem !important;
+  padding: 0.9rem !important;
   background: linear-gradient(135deg, $primary, $accent) !important;
   border: none !important;
   border-radius: 12px !important;
@@ -973,7 +991,8 @@ $warning: #f39c12;
   }
 }
 
-// Modal de Selección de Rol
+/* ---------- Modal de rol ---------- */
+
 .role-modal-overlay {
   position: relative;
   width: 100%;
@@ -1009,12 +1028,12 @@ $warning: #f39c12;
 
 .role-modal-header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.6rem;
 }
 
 .role-modal-title {
   color: $secondary;
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   font-weight: 300;
   background: linear-gradient(135deg, $secondary, $accent);
   -webkit-background-clip: text;
@@ -1026,14 +1045,14 @@ $warning: #f39c12;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.6rem;
 }
 
 .role-card {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 16px;
-  padding: 1.5rem;
+  padding: 1.4rem;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -1049,19 +1068,19 @@ $warning: #f39c12;
 
 .role-icon {
   font-size: 2rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
 }
 
 .role-name {
   color: $secondary;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
 }
 
 .role-description {
   color: $neutral;
-  font-size: 0.85rem;
+  font-size: 0.83rem;
   line-height: 1.4;
   margin: 0;
 }
@@ -1071,7 +1090,7 @@ $warning: #f39c12;
 }
 
 :deep(.cancel-button) {
-  padding: 0.75rem 2rem !important;
+  padding: 0.7rem 2rem !important;
   background: rgba(255, 255, 255, 0.1) !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
   border-radius: 12px !important;
@@ -1087,26 +1106,27 @@ $warning: #f39c12;
   }
 }
 
-// Responsive
+/* ---------- Responsive ---------- */
+
 @media (max-width: 768px) {
   .register-container {
-    margin: 1rem;
-    padding: 2rem 1.5rem;
-    max-width: 500px;
+    margin: 0.6rem;
+    padding: 1.6rem 1.3rem;
+    max-width: 480px;
   }
 
   .register-title {
-    font-size: 1.6rem;
+    font-size: 1.55rem;
   }
 
   .form-row {
     grid-template-columns: 1fr;
-    gap: 0;
+    gap: 0.35rem;
   }
 
   .button-group {
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.6rem;
   }
 
   .role-options {
@@ -1115,27 +1135,27 @@ $warning: #f39c12;
   }
 
   .role-modal-container {
-    margin: 1rem;
+    margin: 0.75rem;
     padding: 1.5rem;
   }
 }
 
 @media (max-width: 480px) {
   .register-page {
-    padding: 1rem 0;
+    padding: 0.6rem 0;
   }
 
   .register-container {
-    margin: 0.5rem;
-    padding: 1.5rem 1rem;
+    margin: 0.4rem;
+    padding: 1.3rem 0.9rem;
   }
 
   .form-group {
-    margin-bottom: 1.2rem;
+    margin-bottom: 0.75rem;
   }
 
   .button-group {
-    margin-top: 1.5rem;
+    margin-top: 1rem;
   }
 }
 </style>

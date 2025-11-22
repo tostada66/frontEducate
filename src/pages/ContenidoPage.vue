@@ -1,19 +1,20 @@
+<!-- src/pages/ContenidoPage.vue -->
 <template>
   <q-page class="q-pa-md bg-grey-2">
-    <!-- 🔹 Banner solo para Admin/Profesor -->
+    <!-- 🔹 Banners de rol -->
     <div
       v-if="auth.isProfessor"
       class="bg-primary text-white text-center q-pa-sm q-mb-md"
     >
-      <q-icon name="visibility" class="q-mr-xs" />
-      Vista previa del contenido (Profesor)
+      <q-icon name="visibility" class="q-mr-xs" /> Vista previa del contenido
+      (Profesor)
     </div>
     <div
       v-else-if="auth.isAdmin"
       class="bg-positive text-white text-center q-pa-sm q-mb-md"
     >
-      <q-icon name="admin_panel_settings" class="q-mr-xs" />
-      Vista del contenido (Administrador)
+      <q-icon name="admin_panel_settings" class="q-mr-xs" /> Vista del contenido
+      (Administrador)
     </div>
 
     <!-- Loader -->
@@ -21,28 +22,28 @@
       <q-spinner-dots color="primary" size="40px" />
     </div>
 
-    <!-- 🔹 Contenido principal -->
-    <div v-else class="row q-col-gutter-md">
+    <!-- 🔹 Contenido -->
+    <div v-else class="row q-col-gutter-md q-mt-md">
       <!-- 📺 Columna izquierda -->
       <div class="col-12 col-md-8">
         <!-- Encabezado -->
-        <div class="encabezado q-mb-sm">
+        <div class="encabezado q-mb-sm q-pt-sm">
           <div class="clase-line">
             <span class="label">Clase:</span>
-            <span class="clase-titulo">{{
-              currentClase?.titulo || "Clase"
-            }}</span>
+            <span class="clase-titulo">
+              {{ currentClase?.titulo || "Clase" }}
+            </span>
           </div>
           <div class="video-line">
             <span class="label">Video:</span>
-            <span class="video-titulo">{{
-              contenido?.titulo || "Contenido"
-            }}</span>
+            <span class="video-titulo">
+              {{ contenido?.titulo || "Contenido" }}
+            </span>
             <span class="sep">·</span>
             <q-icon name="schedule" size="18px" class="dur-icon" />
-            <span class="video-duracion">{{
-              formatDuration(contenido?.duracion)
-            }}</span>
+            <span class="video-duracion">
+              {{ formatDuration(contenido?.duracion) }}
+            </span>
           </div>
         </div>
 
@@ -50,58 +51,30 @@
           {{ contenido?.descripcion }}
         </div>
 
-        <!-- 🎥 Reproductor con Plyr -->
-        <div
-          v-if="contenido?.tipo === 'video'"
-          class="video-container q-mb-lg relative-position"
-          @mouseenter="focusPlayer"
-          @click="focusPlayer"
-        >
-          <div
-            v-if="progreso.porcentaje > 0"
-            class="text-caption text-grey-7 q-mb-xs"
-          >
-            Progreso: {{ progreso.porcentaje }}%
-          </div>
-
-          <!-- Overlays tipo YouTube -->
-          <transition name="fade">
-            <div v-if="skipOverlay" class="yt-overlay absolute-center">
-              {{ skipOverlay }}
-            </div>
-          </transition>
-          <transition name="fade">
-            <div v-if="speedOverlay" class="yt-overlay absolute-center">
-              {{ speedOverlay }}
-            </div>
-          </transition>
-
-          <!-- Video -->
-          <video
-            :key="contenido?.idcontenido"
-            ref="rawVideoEl"
-            playsinline
-            controls
-            class="player focusable-video"
-            tabindex="0"
-            :poster="contenido?.miniatura_publica || undefined"
-          >
-            <source :src="contenido?.archivo" type="video/mp4" />
-            <!-- Si luego usas thumbnails .vtt, déjalo activo -->
-            <track
-              v-if="contenido?.thumb_vtt"
-              kind="metadata"
-              :src="contenido.thumb_vtt"
-              default
-            />
-          </video>
+        <!-- 🎥 Reproductor (componente) -->
+        <div v-if="contenido?.tipo === 'video'" class="q-mb-lg">
+          <!-- ⛔ UI de progreso removida (se mantiene interno) -->
+          <VideoPlyr
+            :src="contenido?.archivo"
+            :poster="contenido?.miniatura_publica"
+            :mimeType="contenido?.mime_type || 'video/mp4'"
+            :startAt="progreso?.ultimo_segundo || 0"
+            :baseURL="baseURL"
+            :convertStorageToStream="true"
+            :debug="false"
+            @ready="onPlayerReady"
+            @progress="onPlayerProgress"
+            @pause="() => guardarProgreso(false)"
+            @ended="onPlayerEnded"
+            @error="onPlayerError"
+          />
         </div>
 
         <!-- ⚠️ No es video -->
         <div v-else>
           <q-banner rounded class="bg-orange-2 text-orange-9">
-            Este contenido no es un video. Usa la pestaña <b>Contenidos</b> para
-            abrir imágenes o documentos.
+            Este contenido no es un video. Usa la pestaña
+            <b>Contenidos</b> para abrir imágenes o documentos.
           </q-banner>
         </div>
 
@@ -145,15 +118,14 @@
                     alt="foto usuario"
                   />
                 </q-avatar>
-
                 <div class="q-ml-sm col">
                   <div class="comment-header">
-                    <span class="author-name">{{
-                      comentario.autor_nombre
-                    }}</span>
-                    <span class="comment-date">{{
-                      comentario.created_at
-                    }}</span>
+                    <span class="author-name">
+                      {{ comentario.autor_nombre }}
+                    </span>
+                    <span class="comment-date">
+                      {{ comentario.created_at }}
+                    </span>
                   </div>
                   <div class="comment-text q-mt-xs">
                     {{ comentario.contenido }}
@@ -199,11 +171,16 @@
                   </q-avatar>
                   <div class="q-ml-sm col">
                     <div class="comment-header">
-                      <span class="author-name">{{ resp.autor_nombre }}</span>
-                      <span class="comment-date">{{ resp.created_at }}</span>
+                      <span class="author-name">
+                        {{ resp.autor_nombre }}
+                      </span>
+                      <span class="comment-date">
+                        {{ resp.created_at }}
+                      </span>
                     </div>
-                    <div class="comment-text q-mt-xs">{{ resp.contenido }}</div>
-
+                    <div class="comment-text q-mt-xs">
+                      {{ resp.contenido }}
+                    </div>
                     <q-btn
                       v-if="puedeEliminar(resp)"
                       flat
@@ -247,6 +224,7 @@
           />
         </div>
 
+        <!-- Lista de VIDEOS -->
         <div v-if="currentTab === 'videos'">
           <q-list bordered class="rounded-borders">
             <q-item
@@ -296,6 +274,7 @@
           </q-list>
         </div>
 
+        <!-- Lista de CONTENIDOS (docs/imágenes) -->
         <div v-else-if="currentTab === 'contenidos'">
           <q-list bordered class="rounded-borders">
             <q-item
@@ -306,6 +285,25 @@
             >
               <q-item-section avatar>
                 <q-avatar
+                  v-if="isImage(c)"
+                  square
+                  size="80px"
+                  class="relative-position"
+                >
+                  <img
+                    :src="c.miniatura_publica || c.archivo"
+                    alt="miniatura"
+                    style="
+                      width: 100%;
+                      height: 100%;
+                      object-fit: cover;
+                      border-radius: 6px;
+                      pointer-events: none;
+                    "
+                  />
+                </q-avatar>
+                <q-avatar
+                  v-else
                   square
                   size="80px"
                   class="bg-blue text-white flex flex-center"
@@ -313,10 +311,13 @@
                   <q-icon :name="getDocIcon(c.archivo)" size="md" />
                 </q-avatar>
               </q-item-section>
+
               <q-item-section>
-                <q-item-label class="text-grey-9">{{ c.titulo }}</q-item-label>
+                <q-item-label class="text-grey-9">
+                  {{ c.titulo }}
+                </q-item-label>
                 <q-item-label caption class="text-grey-7">
-                  {{ c.tipo.toUpperCase() }}
+                  {{ (c.tipo || "documento").toUpperCase() }}
                 </q-item-label>
               </q-item-section>
             </q-item>
@@ -328,26 +329,22 @@
 </template>
 
 <script setup>
-import "plyr/dist/plyr.css";
-import {
-  ref,
-  onMounted,
-  nextTick,
-  watch,
-  computed,
-  onBeforeUnmount,
-} from "vue";
+import { ref, onMounted, nextTick, watch, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { api } from "boot/axios";
 import { useQuasar } from "quasar";
 import { useAuthStore } from "src/stores/auth";
-import Plyr from "plyr";
+import VideoPlyr from "src/components/VideoPlyr.vue";
 
 const route = useRoute();
 const router = useRouter();
 const $q = useQuasar();
 const auth = useAuthStore();
+const baseURL = window.location.origin;
 
+const COMPLETE_THRESHOLD = 60;
+
+/* ---------- Estado ---------- */
 const contenido = ref(null);
 const clases = ref([]);
 const videosFlat = ref([]);
@@ -355,46 +352,21 @@ const contenidosNoVideo = ref([]);
 const loading = ref(false);
 const currentTab = ref("videos");
 
-// 💬 Comentarios
+/* Comentarios */
 const comentarios = ref([]);
 const nuevoComentario = ref("");
 const comentarioPadre = ref(null);
 const sendingComment = ref(false);
 const commentInputRef = ref(null);
 
-// 🎥 Plyr
-const rawVideoEl = ref(null); // <video>
-const plyr = ref(null); // instancia Plyr
-const videoRef = ref(null); // HTMLVideoElement
-const progreso = ref({ ultimo_segundo: 0, porcentaje: 0, completado: false });
+/* Progreso local (interno) */
+const progreso = ref({
+  ultimo_segundo: 0,
+  porcentaje: 0,
+  completado: false,
+});
 
-// Overlays
-const skipOverlay = ref("");
-const speedOverlay = ref("");
-let overlayTimer = null;
-
-// Plyr options (dejamos keyboard off; nosotros manejamos teclas)
-const plyrOptions = {
-  seekTime: 10,
-  controls: [
-    "play-large",
-    "play",
-    "rewind",
-    "fast-forward",
-    "progress",
-    "current-time",
-    "duration",
-    "mute",
-    "volume",
-    "settings",
-    "pip",
-    "fullscreen",
-  ],
-  keyboard: { focused: false, global: false },
-  tooltips: { controls: true, seek: true },
-};
-
-// Utils
+/* Utils */
 const defaultAvatar =
   "data:image/svg+xml;utf8," +
   encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128'>
@@ -410,13 +382,28 @@ const currentClase = computed(() =>
 function formatDuration(sec) {
   const s = Number(sec || 0);
   if (!s) return "—";
+
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
   const ss = Math.floor(s % 60);
+
   const mm = String(m).padStart(2, "0");
   const sss = String(ss).padStart(2, "0");
-  return h > 0 ? `${h}:${mm}:${sss}` : `${m}:${sss}`;
+
+  // ⏱️ Menos de 1 minuto → "SS s"
+  if (s < 60) {
+    return `${ss}s`;
+  }
+
+  // ⏱️ Menos de 1 hora → "M:SS"
+  if (s < 3600) {
+    return `${m}:${sss}`;
+  }
+
+  // ⏱️ 1 hora o más → "H:MM:SS"
+  return `${h}:${mm}:${sss}`;
 }
+
 function getDocIcon(url = "") {
   const l = (url || "").toLowerCase();
   if (l.endsWith(".pdf")) return "picture_as_pdf";
@@ -425,210 +412,14 @@ function getDocIcon(url = "") {
   if (l.endsWith(".ppt") || l.endsWith(".pptx")) return "slideshow";
   return "insert_drive_file";
 }
-function clamp(n, min, max) {
-  return Math.max(min, Math.min(max, n));
-}
-function isTypingTarget(el) {
-  if (!el) return false;
-  const tag = el.tagName?.toLowerCase();
-  return tag === "input" || tag === "textarea" || el.isContentEditable;
-}
-function showOverlay(refVar, text) {
-  refVar.value = text;
-  if (overlayTimer) clearTimeout(overlayTimer);
-  overlayTimer = setTimeout(() => {
-    refVar.value = "";
-  }, 700);
-}
-function focusPlayer() {
-  rawVideoEl.value?.focus?.({ preventScroll: true });
+
+function isImage(c) {
+  const mt = (c?.mime_type || "").toLowerCase();
+  const u = (c?.archivo || "").toLowerCase();
+  return mt.startsWith("image/") || /\.(png|jpe?g|gif|webp|bmp|svg)$/.test(u);
 }
 
-/* ========== Plyr mount / cleanup ========== */
-function destroyPlyr() {
-  try {
-    plyr.value?.destroy();
-  } catch {}
-  plyr.value = null;
-  videoRef.value = null;
-}
-
-async function mountPlyr() {
-  await nextTick();
-  destroyPlyr();
-  if (!rawVideoEl.value) return;
-
-  plyr.value = new Plyr(rawVideoEl.value, plyrOptions);
-  videoRef.value = plyr.value.media;
-
-  // Reposicionar si hay progreso previo
-  videoRef.value.onloadedmetadata = () => {
-    if (progreso.value?.ultimo_segundo > 5) {
-      try {
-        videoRef.value.currentTime = progreso.value.ultimo_segundo;
-      } catch {}
-    }
-  };
-
-  // Guardado periódico
-  let ultimoGuardadoLocal = 0;
-  videoRef.value.ontimeupdate = () => {
-    const current = Math.floor(videoRef.value.currentTime || 0);
-    if (current - ultimoGuardadoLocal >= 15) {
-      guardarProgreso();
-      ultimoGuardadoLocal = current;
-    }
-  };
-  videoRef.value.onended = () => guardarProgreso(true);
-}
-
-/* ========== Hotkeys estilo YouTube ========== */
-function onKeydown(e) {
-  if (!plyr.value || !videoRef.value) return;
-
-  // Si estás escribiendo, no intervenir
-  if (isTypingTarget(e.target)) return;
-
-  // Si no hay un input enfocado, fuerza foco al video
-  const ae = document.activeElement;
-  if (!isTypingTarget(ae)) focusPlayer();
-
-  const v = plyr.value;
-  const el = videoRef.value; // usamos directamente el <video>
-  const step = 10;
-
-  // Bloquear scroll y burbujeo
-  const affectors = [
-    " ",
-    "ArrowUp",
-    "ArrowDown",
-    "ArrowLeft",
-    "ArrowRight",
-    "j",
-    "J",
-    "k",
-    "K",
-    "l",
-    "L",
-  ];
-  if (
-    affectors.includes(e.key) ||
-    /^[0-9]$/.test(e.key) ||
-    e.key === ">" ||
-    e.key === "<" ||
-    e.key.toLowerCase() === "m" ||
-    e.key.toLowerCase() === "f"
-  ) {
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation?.();
-  }
-
-  // 0–9 → saltar a porcentaje
-  if (
-    /^[0-9]$/.test(e.key) &&
-    !e.shiftKey &&
-    !e.altKey &&
-    !e.ctrlKey &&
-    !e.metaKey
-  ) {
-    const pct = e.key === "0" ? 0 : parseInt(e.key, 10) * 0.1;
-    const dur = el.duration || 0;
-    if (dur && isFinite(dur)) {
-      el.currentTime = clamp(dur * pct, 0, dur);
-      showOverlay(skipOverlay, `${Math.round(pct * 100)}%`);
-    }
-    return;
-  }
-
-  switch (e.key) {
-    case " ":
-    case "k":
-    case "K":
-      v.togglePlay();
-      break;
-
-    case "ArrowRight":
-    case "l":
-    case "L":
-      el.currentTime = clamp(
-        (el.currentTime || 0) + step,
-        0,
-        el.duration || Infinity
-      );
-      showOverlay(skipOverlay, ">>> +10s");
-      break;
-
-    case "ArrowLeft":
-    case "j":
-    case "J":
-      el.currentTime = clamp(
-        (el.currentTime || 0) - step,
-        0,
-        el.duration || Infinity
-      );
-      showOverlay(skipOverlay, "<<< -10s");
-      break;
-
-    case "ArrowUp": {
-      const vol = clamp((v.volume ?? 1) + 0.05, 0, 1);
-      v.volume = vol;
-      showOverlay(speedOverlay, `${Math.round(vol * 100)}% 🔊`);
-      break;
-    }
-    case "ArrowDown": {
-      const vol = clamp((v.volume ?? 1) - 0.05, 0, 1);
-      v.volume = vol;
-      showOverlay(speedOverlay, `${Math.round(vol * 100)}% 🔉`);
-      break;
-    }
-
-    case "m":
-    case "M":
-      v.muted = !v.muted;
-      showOverlay(speedOverlay, v.muted ? "Mute" : "Unmute");
-      break;
-
-    case "f":
-    case "F":
-      v.fullscreen.toggle();
-      break;
-
-    // Velocidad con Shift+> / Shift+<
-    case ">":
-      if (e.shiftKey) {
-        v.speed = clamp((v.speed || 1) + 0.25, 0.25, 2);
-        showOverlay(speedOverlay, `${v.speed.toFixed(2)}×`);
-      }
-      break;
-    case "<":
-      if (e.shiftKey) {
-        v.speed = clamp((v.speed || 1) - 0.25, 0.25, 2);
-        showOverlay(speedOverlay, `${v.speed.toFixed(2)}×`);
-      }
-      break;
-
-    // Reset velocidad con Alt+1
-    case "1":
-      if (e.altKey) {
-        v.speed = 1;
-        showOverlay(speedOverlay, `1.00×`);
-      }
-      break;
-  }
-}
-
-function bindHotkeys() {
-  document.addEventListener("keydown", onKeydown, {
-    capture: true,
-    passive: false,
-  });
-}
-function unbindHotkeys() {
-  document.removeEventListener("keydown", onKeydown, { capture: true });
-}
-
-/* ========== Carga principal ========== */
+/* ========== Carga ========== */
 async function loadContenido() {
   loading.value = true;
   try {
@@ -640,11 +431,15 @@ async function loadContenido() {
     );
     contenido.value = data;
 
+    // Progreso si es video
     if (contenido.value?.tipo === "video") {
       await cargarProgreso();
-      await mountPlyr();
     } else {
-      destroyPlyr();
+      progreso.value = {
+        ultimo_segundo: 0,
+        porcentaje: 0,
+        completado: false,
+      };
     }
 
     // Clases de la unidad
@@ -653,7 +448,7 @@ async function loadContenido() {
     );
     clases.value = dataClases;
 
-    // Listado plano de videos (toda la unidad)
+    // VIDEOS de toda la unidad
     const grupos = await Promise.all(
       clases.value.map(async (cl) => {
         const { data: conts } = await api.get(
@@ -662,12 +457,16 @@ async function loadContenido() {
         return conts
           .filter((x) => x.tipo === "video")
           .sort((a, b) => (a.orden || 0) - (b.orden || 0))
-          .map((x) => ({ ...x, claseTitulo: cl.titulo, idclase: cl.idclase }));
+          .map((x) => ({
+            ...x,
+            claseTitulo: cl.titulo,
+            idclase: cl.idclase,
+          }));
       })
     );
     videosFlat.value = grupos.flat();
 
-    // Contenidos no-video de la clase actual
+    // CONTENIDOS no-video de la clase actual
     const { data: contActual } = await api.get(
       `/cursos/${idcurso}/unidades/${idunidad}/clases/${idclase}/contenidos`
     );
@@ -675,7 +474,7 @@ async function loadContenido() {
       .filter((x) => x.tipo !== "video")
       .sort((a, b) => (a.orden || 0) - (b.orden || 0));
 
-    // Comentarios por clase
+    // Comentarios
     await cargarComentarios();
   } catch (err) {
     console.error("❌ Error cargando contenido:", err);
@@ -692,28 +491,71 @@ async function cargarProgreso() {
     if (res.data?.ok && res.data.data) {
       progreso.value = res.data.data;
     } else {
-      progreso.value = { ultimo_segundo: 0, porcentaje: 0, completado: false };
+      progreso.value = {
+        ultimo_segundo: 0,
+        porcentaje: 0,
+        completado: false,
+      };
     }
   } catch {
-    progreso.value = { ultimo_segundo: 0, porcentaje: 0, completado: false };
+    progreso.value = {
+      ultimo_segundo: 0,
+      porcentaje: 0,
+      completado: false,
+    };
   }
 }
 
 async function guardarProgreso(force = false) {
-  const v = plyr.value;
-  if (!v || !contenido.value) return;
-  const current = Math.floor(v.currentTime || 0);
-  const duration = Math.floor(v.duration || 0);
-  if (!duration || (current < 1 && !force)) return;
+  if (!contenido.value || contenido.value?.tipo !== "video") return;
+
+  const durationFallback = Math.max(1, Number(contenido.value?.duracion || 0));
+  const payload = {
+    idclase: route.params.idclase,
+    idcontenido: contenido.value.idcontenido,
+    segundo_actual: Math.max(
+      0,
+      Math.min(progreso.value.ultimo_segundo || 0, durationFallback)
+    ),
+    duracion: durationFallback,
+  };
 
   try {
-    await api.patch("/vistas", {
-      idclase: route.params.idclase,
-      idcontenido: contenido.value.idcontenido,
-      segundo_actual: current,
-      duracion: duration,
-    });
-  } catch {}
+    await api.patch("/vistas", payload);
+  } catch (e) {
+    const status = e?.response?.status || "ERR";
+    if (status !== 401) {
+      $q.notify({
+        type: "negative",
+        message: "No se pudo guardar el progreso",
+      });
+    }
+  }
+}
+
+/* ========== Eventos del reproductor ========== */
+function onPlayerReady({ duration }) {
+  if (!Number(contenido.value?.duracion) && Number.isFinite(duration)) {
+    contenido.value.duracion = Math.round(duration);
+  }
+}
+
+function onPlayerProgress({ current, percent }) {
+  if (Number.isFinite(current)) {
+    progreso.value.ultimo_segundo = Math.floor(current);
+  }
+  if (Number.isFinite(percent)) {
+    progreso.value.porcentaje = percent;
+  }
+}
+
+async function onPlayerEnded() {
+  await guardarProgreso(true);
+}
+
+function onPlayerError(err) {
+  console.error("🎬 Error player:", err);
+  $q.notify({ type: "negative", message: "Error al reproducir el video" });
 }
 
 /* ========== Comentarios ========== */
@@ -726,18 +568,23 @@ async function cargarComentarios() {
     comentarios.value = [];
   }
 }
+
 function puedeEliminar(c) {
   return (
     c.idusuario === auth.user?.idusuario || auth.isProfessor || auth.isAdmin
   );
 }
+
 async function publicarComentario() {
   if (sendingComment.value) return;
   const texto = (nuevoComentario.value || "").trim();
   if (!texto) {
-    $q.notify({ type: "warning", message: "Escribe un comentario primero." });
-    return;
+    return $q.notify({
+      type: "warning",
+      message: "Escribe un comentario primero.",
+    });
   }
+
   sendingComment.value = true;
   try {
     const { idclase } = route.params;
@@ -751,8 +598,7 @@ async function publicarComentario() {
     comentarioPadre.value = null;
     await cargarComentarios();
     $q.notify({ type: "positive", message: "Comentario publicado" });
-  } catch (err) {
-    console.error("❌ Error publicando comentario:", err);
+  } catch {
     $q.notify({
       type: "negative",
       message: "No se pudo publicar el comentario",
@@ -761,6 +607,7 @@ async function publicarComentario() {
     sendingComment.value = false;
   }
 }
+
 async function eliminarComentario(c) {
   try {
     await api.delete(`/clases/comentarios/${c.idcomentario}`);
@@ -770,6 +617,7 @@ async function eliminarComentario(c) {
     $q.notify({ type: "negative", message: "No se pudo eliminar" });
   }
 }
+
 function abrirRespuesta(c) {
   comentarioPadre.value = c;
   nuevoComentario.value = `@${c.autor_nombre} `;
@@ -783,22 +631,31 @@ function abrirRespuesta(c) {
   });
 }
 
-/* ========== Navegación + watchers ========== */
+/* ========== Navegación ========== */
 function goToContenido(item) {
   const { idcurso, idunidad } = route.params;
-  destroyPlyr();
-  progreso.value = { ultimo_segundo: 0, porcentaje: 0, completado: false };
 
-  const targetClaseId = item.idclase ?? route.params.idclase;
-  router.push({
-    name: "contenido-detalle",
-    params: {
-      idcurso,
-      idunidad,
-      idclase: targetClaseId,
-      idcontenido: item.idcontenido,
-    },
-  });
+  if (item.tipo === "video") {
+    router.push({
+      name: "contenido-detalle",
+      params: {
+        idcurso,
+        idunidad,
+        idclase: item.idclase ?? route.params.idclase,
+        idcontenido: item.idcontenido,
+      },
+    });
+  } else {
+    router.push({
+      name: "contenido-docs",
+      params: {
+        idcurso,
+        idunidad,
+        idclase: item.idclase ?? route.params.idclase,
+        idcontenido: item.idcontenido,
+      },
+    });
+  }
 }
 
 watch(
@@ -811,90 +668,57 @@ watch(
   }
 );
 
-// Remonta Plyr cuando cambia la URL del video
-watch(
-  () => contenido.value?.archivo,
-  async (n, o) => {
-    if (!n || n === o) return;
-    await nextTick();
-    await mountPlyr();
-  }
-);
-
 onMounted(async () => {
   await loadContenido();
-  bindHotkeys();
-});
-onBeforeUnmount(() => {
-  unbindHotkeys();
-  destroyPlyr();
 });
 </script>
 
 <style scoped>
-.video-container .player {
-  width: 100%;
-  border-radius: 12px;
-}
-
-/* Evita outlines feos al enfocar el video con tabindex */
-.focusable-video:focus {
-  outline: none;
-}
-
-/* overlay tipo YouTube */
-.yt-overlay {
-  background: rgba(0, 0, 0, 0.65);
-  color: #fff;
-  padding: 8px 14px;
-  border-radius: 12px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  user-select: none;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.18s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
 /* Encabezado */
+.encabezado {
+  margin-bottom: 0.3rem;
+  padding-top: 1.2rem; /* 🔥 Nueva separación arriba */
+}
+
 .encabezado .label {
   font-weight: 700;
   margin-right: 0.35rem;
   color: #607d8b;
 }
+
 .encabezado .clase-line {
   font-size: 1.35rem;
   line-height: 1.2;
   margin-bottom: 0.15rem;
 }
+
 .encabezado .clase-titulo {
   color: var(--q-primary);
   font-weight: 800;
   letter-spacing: 0.2px;
 }
+
 .encabezado .video-line {
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
   flex-wrap: wrap;
 }
+
 .encabezado .video-titulo {
   color: var(--q-positive);
   font-weight: 600;
 }
+
 .encabezado .sep {
   color: #9e9e9e;
 }
+
 .encabezado .dur-icon,
 .encabezado .video-duracion {
   color: #2e7d32cc;
 }
+
 .encabezado .video-duracion {
   font-weight: 600;
 }
@@ -906,19 +730,21 @@ onBeforeUnmount(() => {
   gap: 0.5rem;
   flex-wrap: wrap;
 }
+
 .author-name {
   font-weight: 700;
   color: #212121 !important;
 }
+
 .comment-date {
   font-size: 0.85rem;
   color: #757575;
 }
+
 .comment-text {
   color: #212121;
 }
 
-/* Avatar */
 .q-avatar img {
   object-fit: cover;
   filter: none;
