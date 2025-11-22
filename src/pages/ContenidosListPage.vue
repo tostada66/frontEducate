@@ -1,20 +1,58 @@
 <template>
   <q-page class="q-pa-md">
-    <!-- Encabezado -->
+    <!-- 🧭 Encabezado -->
     <div class="row items-center q-mb-md">
-      <div class="text-h6">Contenidos de la Clase</div>
-      <q-space />
       <q-btn
+        color="secondary"
+        label="Volver a Clases"
+        icon="arrow_back"
+        @click="goBackClases"
+      />
+
+      <q-space />
+
+      <div class="text-h4 text-weight-bold text-primary text-center">
+        Contenidos de la Clase
+      </div>
+
+      <q-space />
+
+      <!-- ➕ Solo si curso editable -->
+      <q-btn
+        v-if="isEditable(curso?.estado)"
         color="primary"
         icon="add"
         label="Nuevo Contenido"
-        @click="openForm()"
+        @click="goCreateContenido"
       />
     </div>
 
-    <!-- Tabla -->
+    <!-- 🔍 Filtro -->
+    <div class="row q-col-gutter-md q-mb-md">
+      <div class="col-12 col-md-4">
+        <q-input
+          v-model="filtroTitulo"
+          outlined
+          dense
+          debounce="300"
+          placeholder="Buscar por título"
+        >
+          <template #prepend><q-icon name="search" /></template>
+          <template #append>
+            <q-icon
+              v-if="filtroTitulo"
+              name="close"
+              class="cursor-pointer"
+              @click="filtroTitulo = ''"
+            />
+          </template>
+        </q-input>
+      </div>
+    </div>
+
+    <!-- 📋 Tabla -->
     <q-table
-      :rows="contenidos"
+      :rows="filteredContenidos"
       :columns="columns"
       row-key="idcontenido"
       flat
@@ -22,163 +60,203 @@
       :loading="loading"
       no-data-label="No hay contenidos registrados"
     >
-      <template v-slot:body-cell-acciones="props">
+      <!-- 🎞️ Tipo -->
+      <template #body-cell-tipo="props">
         <q-td>
+          <q-chip
+            v-if="normalizeTipo(props.row.tipo) === 'imagen'"
+            color="purple-6"
+            text-color="white"
+            icon="image"
+            dense
+          >
+            Imagen
+          </q-chip>
+
+          <q-chip
+            v-else-if="normalizeTipo(props.row.tipo) === 'documento'"
+            color="blue-6"
+            text-color="white"
+            icon="description"
+            dense
+          >
+            Documento
+          </q-chip>
+
+          <q-chip
+            v-else-if="normalizeTipo(props.row.tipo) === 'video'"
+            color="red-6"
+            text-color="white"
+            icon="play_circle"
+            dense
+          >
+            Video
+          </q-chip>
+
+          <q-chip v-else color="grey-6" text-color="white" icon="help" dense>
+            Otro
+          </q-chip>
+        </q-td>
+      </template>
+
+      <!-- 🔢 Orden -->
+      <template #body-cell-orden="props">
+        <q-td class="text-center">
+          <div class="row items-center justify-center q-gutter-xs">
+            <span>{{ props.row.orden }}</span>
+            <template v-if="isEditable(curso?.estado)">
+              <q-btn
+                v-if="contenidos.length > 1 && props.row.orden > 1"
+                :disable="loadingOrden"
+                dense
+                flat
+                round
+                size="sm"
+                icon="arrow_upward"
+                color="primary"
+                @click="cambiarOrden(props.row.idcontenido, 'up')"
+              />
+              <q-btn
+                v-if="
+                  contenidos.length > 1 && props.row.orden < contenidos.length
+                "
+                :disable="loadingOrden"
+                dense
+                flat
+                round
+                size="sm"
+                icon="arrow_downward"
+                color="primary"
+                @click="cambiarOrden(props.row.idcontenido, 'down')"
+              />
+            </template>
+          </div>
+        </q-td>
+      </template>
+
+      <!-- ⚙️ Acciones -->
+      <template #body-cell-acciones="props">
+        <q-td class="text-center q-gutter-xs">
+          <!-- ✏️ Editar -->
           <q-btn
+            v-if="isEditable(curso?.estado)"
             dense
             flat
+            round
             icon="edit"
             color="primary"
-            @click="openForm(props.row)"
-          />
+            @click="goEditContenido(props.row.idcontenido)"
+          >
+            <q-tooltip>Editar</q-tooltip>
+          </q-btn>
+
+          <!-- 🗑 Eliminar -->
           <q-btn
+            v-if="isEditable(curso?.estado)"
             dense
             flat
+            round
             icon="delete"
             color="negative"
             @click="deleteContenido(props.row.idcontenido)"
-          />
+          >
+            <q-tooltip>Eliminar</q-tooltip>
+          </q-btn>
+
+          <!-- 👁 Ver contenido -->
+          <q-btn
+            dense
+            flat
+            round
+            icon="visibility"
+            color="teal"
+            @click="verContenido(props.row)"
+          >
+            <q-tooltip>
+              {{
+                curso?.estado === "rechazado"
+                  ? "Ver detalles del curso rechazado"
+                  : "Vista previa del contenido"
+              }}
+            </q-tooltip>
+          </q-btn>
         </q-td>
       </template>
     </q-table>
-
-    <!-- Diálogo -->
-    <q-dialog v-model="formDialog">
-      <q-card style="min-width: 500px">
-        <q-card-section>
-          <div class="text-h6">
-            {{ form.idcontenido ? "Editar Contenido" : "Nuevo Contenido" }}
-          </div>
-        </q-card-section>
-
-        <q-card-section>
-          <q-input v-model="form.titulo" label="Título" outlined dense />
-          <q-input
-            v-model="form.descripcion"
-            label="Descripción"
-            type="textarea"
-            outlined
-            dense
-          />
-          <q-select
-            v-model="form.tipo"
-            :options="['texto', 'video', 'pdf', 'link']"
-            label="Tipo"
-            outlined
-            dense
-          />
-
-          <!-- Campo archivo con preview -->
-          <div class="q-mt-md">
-            <input
-              ref="fileInput"
-              type="file"
-              class="hidden"
-              :accept="fileAccept"
-              @change="onFileChange"
-            />
-
-            <q-btn
-              label="Seleccionar archivo"
-              color="primary"
-              @click="$refs.fileInput.click()"
-            />
-
-            <!-- Vista previa si es imagen -->
-            <q-img
-              v-if="previewUrl && form.tipo === 'texto'"
-              :src="previewUrl"
-              style="height: 200px; margin-top: 10px; border-radius: 8px"
-              contain
-            />
-            <div v-else-if="previewUrl" class="q-mt-sm text-grey">
-              Archivo seleccionado: <b>{{ archivoFile?.name }}</b>
-            </div>
-          </div>
-
-          <q-input
-            v-model.number="form.orden"
-            label="Orden"
-            type="number"
-            outlined
-            dense
-          />
-          <q-select
-            v-model="form.estado"
-            :options="['borrador', 'publicado']"
-            label="Estado"
-            outlined
-            dense
-          />
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn flat label="Cancelar" v-close-popup />
-          <q-btn
-            color="primary"
-            label="Guardar"
-            @click="saveContenido"
-            :loading="loading"
-          />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
   </q-page>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { api } from "boot/axios";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useQuasar } from "quasar";
 
 const $q = useQuasar();
 const route = useRoute();
+const router = useRouter();
+
+const idcurso = route.params.idcurso;
+const idunidad = route.params.idunidad;
 const idclase = route.params.idclase;
 
+const curso = ref(null);
 const contenidos = ref([]);
 const loading = ref(false);
-const formDialog = ref(false);
+const loadingOrden = ref(false);
+const filtroTitulo = ref("");
 
-const form = ref(resetForm());
-const archivoFile = ref(null);
-const previewUrl = ref(null);
-
-function resetForm() {
-  return {
-    idcontenido: null,
-    titulo: "",
-    descripcion: "",
-    tipo: "texto",
-    url: "",
-    orden: 1,
-    estado: "borrador",
-  };
-}
-
+// 🧩 Columnas
 const columns = [
   { name: "titulo", label: "Título", field: "titulo", align: "left" },
   { name: "tipo", label: "Tipo", field: "tipo", align: "left" },
-  { name: "orden", label: "Orden", field: "orden", align: "left" },
-  { name: "estado", label: "Estado", field: "estado", align: "left" },
-  { name: "acciones", label: "Acciones", field: "acciones", align: "right" },
+  { name: "orden", label: "Orden", field: "orden", align: "center" },
+  { name: "estado", label: "Estado", field: "estado", align: "center" },
+  { name: "acciones", label: "Acciones", align: "center" },
 ];
 
-const fileAccept = ref("*/*");
+// 🎯 Normalizar tipo
+function normalizeTipo(tipo) {
+  if (!tipo) return "otro";
+  const t = tipo.toLowerCase();
+  if (["imagen", "image", "png", "jpg"].includes(t)) return "imagen";
+  if (["video", "mp4", "avi", "mov"].includes(t)) return "video";
+  if (["documento", "pdf", "word", "doc", "docx", "ppt", "pptx"].includes(t))
+    return "documento";
+  return "otro";
+}
 
-function onFileChange(e) {
-  const file = e.target.files[0];
-  if (file) {
-    archivoFile.value = file;
-    previewUrl.value = URL.createObjectURL(file);
-    form.value.url = file.name; // solo referencia
+// 🔍 Filtrar
+const filteredContenidos = computed(() =>
+  contenidos.value.filter((c) =>
+    !filtroTitulo.value
+      ? true
+      : c.titulo.toLowerCase().includes(filtroTitulo.value.toLowerCase())
+  )
+);
+
+// ✅ Permitir acciones en “borrador” o “rechazado”
+function isEditable(estado) {
+  const e = (estado || "").toLowerCase();
+  return e === "borrador" || e === "rechazado";
+}
+
+// 📦 Cargar curso y contenidos
+async function loadCurso() {
+  try {
+    const { data } = await api.get(`/cursos/${idcurso}`);
+    curso.value = data;
+  } catch (err) {
+    console.error("❌ Error cargando curso:", err);
   }
 }
 
 async function loadContenidos() {
   loading.value = true;
   try {
-    const { data } = await api.get(`/clases/${idclase}/contenidos`);
+    const { data } = await api.get(
+      `/cursos/${idcurso}/unidades/${idunidad}/clases/${idclase}/contenidos`
+    );
     contenidos.value = data;
   } catch (err) {
     $q.notify({ type: "negative", message: "Error cargando contenidos" });
@@ -188,51 +266,24 @@ async function loadContenidos() {
   }
 }
 
-function openForm(contenido = null) {
-  form.value = contenido ? { ...contenido } : resetForm();
-  previewUrl.value = null;
-  archivoFile.value = null;
-  formDialog.value = true;
+// ➕ Crear
+function goCreateContenido() {
+  router.push({
+    name: "contenidos-create",
+    params: { idcurso, idunidad, idclase },
+  });
 }
 
-async function saveContenido() {
-  loading.value = true;
-  try {
-    const fd = new FormData();
-    fd.append("titulo", form.value.titulo);
-    fd.append("descripcion", form.value.descripcion);
-    fd.append("tipo", form.value.tipo);
-    fd.append("orden", form.value.orden);
-    fd.append("estado", form.value.estado);
-    if (archivoFile.value) {
-      fd.append("archivo", archivoFile.value);
-    }
-
-    if (form.value.idcontenido) {
-      await api.post(
-        `/clases/${idclase}/contenidos/${form.value.idcontenido}?_method=PATCH`,
-        fd,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
-      $q.notify({ type: "positive", message: "Contenido actualizado" });
-    } else {
-      await api.post(`/clases/${idclase}/contenidos`, fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      $q.notify({ type: "positive", message: "Contenido creado" });
-    }
-
-    formDialog.value = false;
-    await loadContenidos();
-  } catch (err) {
-    $q.notify({ type: "negative", message: "Error guardando contenido" });
-    console.error(err);
-  } finally {
-    loading.value = false;
-  }
+// ✏️ Editar
+function goEditContenido(idcontenido) {
+  router.push({
+    name: "contenidos-edit",
+    params: { idcurso, idunidad, idclase, idcontenido },
+  });
 }
 
-async function deleteContenido(id) {
+// ❌ Eliminar
+async function deleteContenido(idcontenido) {
   $q.dialog({
     title: "Confirmar",
     message: "¿Eliminar este contenido?",
@@ -240,17 +291,79 @@ async function deleteContenido(id) {
     persistent: true,
   }).onOk(async () => {
     try {
-      await api.delete(`/clases/${idclase}/contenidos/${id}`);
-      $q.notify({ type: "positive", message: "Contenido eliminado" });
+      await api.delete(
+        `/cursos/${idcurso}/unidades/${idunidad}/clases/${idclase}/contenidos/${idcontenido}`
+      );
+      $q.notify({
+        type: "positive",
+        message: "Contenido eliminado correctamente",
+      });
       await loadContenidos();
     } catch (err) {
+      console.error("❌ Error eliminando contenido:", err);
       $q.notify({ type: "negative", message: "Error eliminando contenido" });
-      console.error(err);
     }
   });
 }
 
+// 🔄 Cambiar orden
+async function cambiarOrden(idcontenido, direccion) {
+  loadingOrden.value = true;
+  try {
+    const { data } = await api.patch(
+      `/cursos/${idcurso}/unidades/${idunidad}/clases/${idclase}/contenidos/${idcontenido}/orden`,
+      { direccion }
+    );
+    contenidos.value = data.contenidos;
+    $q.notify({ type: "positive", message: "Orden actualizado" });
+  } catch (err) {
+    console.error("❌ Error cambiando orden:", err);
+    $q.notify({ type: "negative", message: "Error cambiando orden" });
+  } finally {
+    loadingOrden.value = false;
+  }
+}
+
+// 👁 Ver contenido
+function verContenido(contenido) {
+  const tipo = normalizeTipo(contenido.tipo);
+
+  if (tipo === "video") {
+    router.push({
+      name: "profesor-contenido-detalle",
+      params: {
+        idcurso,
+        idunidad,
+        idclase,
+        idcontenido: contenido.idcontenido,
+      },
+    });
+  } else if (["imagen", "documento"].includes(tipo)) {
+    router.push({
+      name: "profesor-contenido-docs",
+      params: {
+        idcurso,
+        idunidad,
+        idclase,
+        idcontenido: contenido.idcontenido,
+      },
+    });
+  } else {
+    $q.notify({
+      type: "warning",
+      message: "Tipo de contenido no soportado para vista previa.",
+    });
+  }
+}
+
+// 🔙 Volver
+function goBackClases() {
+  router.push({ name: "clases-list", params: { idcurso, idunidad } });
+}
+
+// 🚀 Montaje
 onMounted(() => {
+  loadCurso();
   loadContenidos();
 });
 </script>

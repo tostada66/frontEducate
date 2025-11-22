@@ -10,7 +10,6 @@ import routes from "./routes";
 import { useAuthStore } from "src/stores/auth"; // guard usa Pinia
 
 export default route(function ({ store /*, ssrContext */ }) {
-  // ✅ recibe store
   const createHistory = process.env.SERVER
     ? createMemoryHistory
     : process.env.VUE_ROUTER_MODE === "history"
@@ -25,8 +24,13 @@ export default route(function ({ store /*, ssrContext */ }) {
 
   // 🔒 Guard global
   Router.beforeEach((to) => {
-    const auth = useAuthStore(store); // ✅ pasa store para evitar getActivePinia
+    const auth = useAuthStore(store);
     const isAuthed = !!auth.token;
+
+    // 0) Si está logueado e intenta ir a la portada → redirigir al home
+    if (to.name === "portada" && isAuthed) {
+      return { path: "/home" };
+    }
 
     // 1) Rutas que requieren sesión
     if (to.meta?.requiresAuth && !isAuthed) {
@@ -38,13 +42,11 @@ export default route(function ({ store /*, ssrContext */ }) {
 
     // 2) Si ya está logueado y va a /login, redirige a lo que corresponda
     if (isAuthed && to.path === "/login") {
-      return auth.needsRole
-        ? { path: "/choose-role" }
-        : { path: "/DashboardPage" };
+      return auth.needsRole ? { path: "/choose-role" } : { path: "/home" }; // 👈 ojo: aquí cambié DashboardPage → home
     }
 
     // 3) Si necesita elegir rol y está entrando a algo distinto a /choose-role,
-    //    fuerzalo a escoger rol primero (pero deja pasar /logout por si acaso)
+    //    fuerzalo a escoger rol primero
     if (isAuthed && auth.needsRole && to.path !== "/choose-role") {
       return { path: "/choose-role" };
     }
